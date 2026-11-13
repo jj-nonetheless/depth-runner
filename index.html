@@ -5,6 +5,7 @@
 /* Layout: one C64 "screen" — light-blue border frame around the game canvas, READY-prompt style text below. Deliberately single-theme (dark). */
 :root{
   --border:#6C5EB5; --screen:#352879; --ink:#A59FF0; --bright:#FFFFFF; --amber:#C3B15F; --sub:#B8C76F; --boat:#E08070; --void:#14102E;
+  --pu-def:#6CD2E6; --pu-off:#F0A040; --pu-spd:#F0E060;
   --display:"Press Start 2P", ui-monospace, monospace;
   --body:"VT323", ui-monospace, "Courier New", monospace;
   color-scheme:dark;
@@ -44,6 +45,8 @@ dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 16px}
 dt{color:var(--bright)}
 dd{margin:0}
 kbd{font-family:var(--display);font-size:11px;color:var(--void);background:var(--ink);padding:3px 6px;display:inline-block}
+.cap{display:inline-grid;place-items:center;width:22px;height:22px;font-family:var(--display);font-size:10px;color:var(--void);vertical-align:2px}
+.cap.def{background:var(--pu-def)} .cap.off{background:var(--pu-off)} .cap.spd{background:var(--pu-spd)} .cap.life{background:var(--sub)}
 .pts{font-variant-numeric:tabular-nums;color:var(--sub)}
 p.note{margin:0;max-width:65ch}
 .cursor{display:inline-block;width:.55em;height:1em;background:var(--ink);vertical-align:-2px;animation:blink 1s steps(1) infinite}
@@ -107,6 +110,23 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
       </dl>
     </section>
     <section>
+      <h2>Power-ups</h2>
+      <h3 class="s">Sub: catch capsules as they sink</h3>
+      <dl>
+        <dt><span class="cap def">S</span></dt><dd>Shield: blocks one hit</dd>
+        <dt><span class="cap off">T</span></dt><dd>Twin torpedoes, 10 sec</dd>
+        <dt><span class="cap spd">R</span></dt><dd>Rapid fire, 10 sec</dd>
+        <dt><span class="cap life">+</span></dt><dd>Extra sub (rare, 1 player, level 2+)</dd>
+      </dl>
+      <h3 class="b">Ship: drive over buoys</h3>
+      <dl>
+        <dt><span class="cap def">A</span></dt><dd>Armor: blocks one torpedo</dd>
+        <dt><span class="cap off">C</span></dt><dd>Cluster: 3 charges per drop, 10 sec</dd>
+        <dt><span class="cap spd">R</span></dt><dd>Fast reload, 10 sec</dd>
+      </dl>
+      <p class="note" style="margin-top:12px">They turn up more often the longer a game runs. Losing a life loses timed power-ups.</p>
+    </section>
+    <section>
       <h2>1 Player</h2>
       <dl>
         <dt>Depth charge</dt><dd class="pts">10 PTS</dd>
@@ -128,13 +148,31 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 <script>
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 const W=160,H=120,SURF=22,BED=H-8;
-const P={sky:'#352879',sea:'#40318D',deep:'#2A1F6B',bed:'#68372B',sub:'#B8C76F',subd:'#588D43',ship:'#9F9F9F',shipd:'#444444',boat:'#E08070',boatd:'#8B3A3A',chg:'#000000',tor:'#FFFFFF',boom:'#C3B15F',red:'#9A6759',txt:'#FFFFFF'};
+const P={sky:'#352879',sea:'#40318D',deep:'#2A1F6B',bed:'#68372B',sub:'#B8C76F',subd:'#588D43',ship:'#9F9F9F',shipd:'#444444',boat:'#E08070',boatd:'#8B3A3A',chg:'#000000',tor:'#FFFFFF',boom:'#C3B15F',red:'#9A6759',txt:'#FFFFFF',dark:'#14102E',def:'#6CD2E6'};
 const SUB=['....##......','...####.....','.##########.','############','.##########.'];
 const SHIP=['.......#........','......###.......','..############..','################','.##############.','..############..'];
 const BOAT=['.....#..........','....###...#.....','..###########...','################','.##############.','..############..'];
 function spr(a,x,y,c,c2){for(let r=0;r<a.length;r++)for(let i=0;i<a[r].length;i++)if(a[r][i]==='#'){ctx.fillStyle=(r===a.length-1&&c2)?c2:c;ctx.fillRect((x+i)|0,(y+r)|0,1,1);}}
 
+// power-ups: colour = category (cyan defence, orange weapon, yellow speed), letter = which one
+const GLYPH={S:['###','#..','###','..#','###'],T:['###','.#.','.#.','.#.','.#.'],R:['##.','#.#','##.','#.#','#.#'],'+':['...','.#.','###','.#.','...'],C:['###','#..','#..','#..','###'],A:['.#.','#.#','###','#.#','#.#']};
+const PU={
+  shield:{g:'S',c:'#6CD2E6',name:'SHIELD'},
+  twin:{g:'T',c:'#F0A040',name:'TWIN TORPS',dur:600},
+  rapid:{g:'R',c:'#F0E060',name:'RAPID FIRE',dur:600},
+  life:{g:'+',c:'#B8C76F',name:'EXTRA SUB'},
+  armor:{g:'A',c:'#6CD2E6',name:'ARMOR'},
+  cluster:{g:'C',c:'#F0A040',name:'CLUSTER',dur:600},
+  reload:{g:'R',c:'#F0E060',name:'FAST RELOAD',dur:600},
+};
+const SHIP_TABLE=[['armor',30],['cluster',35],['reload',35]];
+function glyph(g,x,y,c){ctx.fillStyle=c;const a=GLYPH[g];for(let r=0;r<5;r++)for(let i=0;i<3;i++)if(a[r][i]==='#')ctx.fillRect(x+i,y+r,1,1);}
+function capsule(k,x,y,flash){const p=PU[k];x|=0;y|=0;ctx.fillStyle=flash?'#FFFFFF':p.c;ctx.fillRect(x+1,y,5,7);ctx.fillRect(x,y+1,7,5);ctx.fillStyle=p.c;ctx.fillRect(x+1,y+1,5,5);glyph(p.g,x+2,y+1,P.dark);}
+function icon(k,x,y,left){if(left!==undefined&&left<120&&(tick>>3)%2)return;ctx.fillStyle=PU[k].c;ctx.fillRect(x,y,5,7);glyph(PU[k].g,x+1,y+1,P.dark);}
+function pick(table){let t=0;for(const e of table)t+=e[1];let r=Math.random()*t;for(const e of table){if((r-=e[1])<0)return e[0];}return table[0][0];}
+
 let ac;function beep(f,d,t='square',v=.05){try{ac=ac||new AudioContext();if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.stop(ac.currentTime+d);}catch(e){}}
+function jingle(){beep(660,.07);setTimeout(()=>beep(880,.07),70);setTimeout(()=>beep(1320,.1),140);}
 
 let hi=0;try{hi=+localStorage.getItem('depthrunner.hi')||0}catch(e){}
 function saveHi(){try{localStorage.setItem('depthrunner.hi',hi)}catch(e){}}
@@ -170,21 +208,52 @@ function bindPad(id,code){const b=document.getElementById(id);
 bindPad('pl','ArrowLeft');bindPad('pr','ArrowRight');bindPad('pf','ArrowUp');
 bindPad('bl','KeyA');bindPad('br','KeyD');bindPad('bd','KeyS');
 
-let sub,ships,charges,torps,parts,score,lives,level,sunk,cool,inv,spawn,boat,boatLives;
-function reset(){sub={x:74,y:BED-6};ships=[];charges=[];torps=[];parts=[];score=0;lives=3;level=1;sunk=0;cool=0;inv=60;spawn=30;winner='';
-  boatLives=3;boat={x:72,y:SURF-5,cool:30,down:0,inv:60};}
+let sub,ships,charges,torps,parts,items,score,lives,level,sunk,cool,inv,spawn,boat,boatLives,puSub,puShip,elapsed,msg;
+function reset(){sub={x:74,y:BED-6,shield:false,twin:0,rapid:0};ships=[];charges=[];torps=[];parts=[];items=[];score=0;lives=3;level=1;sunk=0;cool=0;inv=60;spawn=30;winner='';
+  boatLives=3;boat={x:72,y:SURF-5,cool:30,down:0,inv:60,armor:false,cluster:0,rapid:0};
+  elapsed=0;puSub=600+Math.random()*300;puShip=600+Math.random()*300;msg={text:'',c:'',t:0};}
 function boom(x,y,n,c){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,l:20+Math.random()*20,c});}
 function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
 function stepParts(){for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.l--;}parts=parts.filter(p=>p.l>0);}
 function endGame(w){state='over';winner=w;if(mode===1&&score>hi){hi=score;saveHi();}
   if(mode===2){beep(523,.12);setTimeout(()=>beep(659,.12),120);setTimeout(()=>beep(784,.25),240);}}
 
+// gaps between power-ups shrink from ~9-18s toward ~5-14s over the first two minutes
+function puGap(){return 540+Math.random()*540-Math.min(240,elapsed/30);}
+function subTable(){const t=[['shield',35],['twin',30],['rapid',30]];if(mode===1&&level>=2&&lives<5)t.push(['life',8]);return t;}
+function spawnItem(owner,kind,x){
+  if(owner==='sub')items.push({owner,kind,x:x??4+Math.random()*(W-15),y:SURF+2,v:.4,life:300});
+  else items.push({owner,kind,x:x??8+Math.random()*(W-23),y:SURF-6,v:0,life:360});}
+function applySub(k){const p=PU[k];if(k==='shield')sub.shield=true;else if(k==='life')lives++;else sub[k]=p.dur;msg={text:p.name,c:p.c,t:90};jingle();}
+function applyShip(k){const p=PU[k];if(k==='armor')boat.armor=true;else if(k==='cluster')boat.cluster=p.dur;else boat.rapid=p.dur;msg={text:'SHIP '+p.name,c:p.c,t:90};jingle();}
+function updateItems(){
+  elapsed++;
+  if(--puSub<=0){spawnItem('sub',pick(subTable()));puSub=puGap();}
+  if(mode===2&&--puShip<=0){spawnItem('ship',pick(SHIP_TABLE));puShip=puGap();}
+  for(const it of items){
+    if(it.owner==='sub'){
+      if(it.y<BED-7)it.y=Math.min(BED-7,it.y+it.v);else it.life--;
+      if(hit({x:sub.x,y:sub.y,w:12,h:5},{x:it.x,y:it.y,w:7,h:7})){it.dead=true;applySub(it.kind);}
+    }else{
+      it.life--;
+      if(boat.down===0&&hit({x:boat.x,y:boat.y,w:16,h:6},{x:it.x,y:it.y,w:7,h:7})){it.dead=true;applyShip(it.kind);}
+    }
+    if(it.life<=0)it.dead=true;
+  }
+  items=items.filter(i=>!i.dead);
+  if(sub.twin>0)sub.twin--;if(sub.rapid>0)sub.rapid--;if(boat.cluster>0)boat.cluster--;if(boat.rapid>0)boat.rapid--;
+  if(msg.t>0)msg.t--;
+}
+
 function updateSub(){
   const L=keys.ArrowLeft||(mode===1&&keys.KeyA),R=keys.ArrowRight||(mode===1&&keys.KeyD);
   if(L)sub.x-=1.2;if(R)sub.x+=1.2;
   sub.x=Math.max(0,Math.min(W-12,sub.x));
   if(cool>0)cool--;
-  if((keys.Space||keys.ArrowUp)&&cool===0&&torps.length<3){torps.push({x:sub.x+4,y:sub.y-2});cool=15;beep(880,.08);}
+  const twin=sub.twin>0,max=twin?6:3;
+  if((keys.Space||keys.ArrowUp)&&cool===0&&torps.length+(twin?2:1)<=max){
+    if(twin)torps.push({x:sub.x+1,y:sub.y-1},{x:sub.x+9,y:sub.y-1});else torps.push({x:sub.x+4,y:sub.y-2});
+    cool=sub.rapid>0?6:15;beep(twin?990:880,.08);}
   if(inv>0)inv--;
 }
 function updateAiShips(){
@@ -197,25 +266,35 @@ function updateBoat(){
   if(keys.KeyA)boat.x-=1;if(keys.KeyD)boat.x+=1;
   boat.x=Math.max(0,Math.min(W-16,boat.x));
   if(boat.cool>0)boat.cool--;if(boat.inv>0)boat.inv--;
-  if(keys.KeyS&&boat.cool===0&&charges.length<5){charges.push({x:boat.x+7,y:SURF+1,v:.65});boat.cool=40;beep(200,.1,'triangle');}
+  const cluster=boat.cluster>0;
+  if(keys.KeyS&&boat.cool===0&&charges.length<(cluster?8:5)){
+    for(const x of cluster?[boat.x+1,boat.x+7,boat.x+13]:[boat.x+7])charges.push({x,y:SURF+1,v:.65});
+    boat.cool=boat.rapid>0?18:40;beep(200,.1,'triangle');}
 }
+function sinkBoat(t){t.dead=true;
+  if(boat.armor){boat.armor=false;boat.inv=30;boom(boat.x+8,boat.y+3,14,P.def);beep(500,.15,'triangle');return;}
+  boatLives--;boat.cluster=0;boat.rapid=0;boom(boat.x+8,boat.y+3,30,P.boom);boom(boat.x+8,boat.y+3,15,P.boat);beep(90,.4,'sawtooth',.08);
+  if(boatLives<=0)endGame('SUB');else boat.down=90;}
 function torpedoHits(){
   for(const t of torps){const tb={x:t.x,y:t.y,w:2,h:4};
     for(const c of charges)if(!c.dead&&!t.dead&&hit(tb,{x:c.x-1,y:c.y-1,w:4,h:4})){c.dead=t.dead=true;score+=10;boom(c.x,c.y,8,P.boom);beep(300,.15,'sawtooth');}
     for(const s of ships)if(!s.dead&&!t.dead&&hit(tb,{x:s.x,y:s.y,w:16,h:6})){s.dead=t.dead=true;score+=100;sunk++;boom(s.x+8,s.y+3,30,P.boom);boom(s.x+8,s.y+3,15,P.red);beep(90,.4,'sawtooth',.08);if(sunk%8===0){level++;beep(523,.1);setTimeout(()=>beep(784,.15),100);}}
-    if(mode===2&&boat.down===0&&boat.inv===0&&!t.dead&&hit(tb,{x:boat.x,y:boat.y,w:16,h:6})){t.dead=true;boatLives--;boom(boat.x+8,boat.y+3,30,P.boom);boom(boat.x+8,boat.y+3,15,P.boat);beep(90,.4,'sawtooth',.08);
-      if(boatLives<=0)endGame('SUB');else boat.down=90;}
+    if(mode===2&&boat.down===0&&boat.inv===0&&!t.dead&&hit(tb,{x:boat.x,y:boat.y,w:16,h:6}))sinkBoat(t);
   }
 }
+function hitSub(c){c.dead=true;
+  if(sub.shield){sub.shield=false;inv=30;boom(sub.x+6,sub.y+2,14,P.def);beep(500,.15,'triangle');return;}
+  lives--;sub.twin=0;sub.rapid=0;boom(sub.x+6,sub.y+2,40,P.sub);beep(60,.6,'sawtooth',.1);inv=90;if(lives<=0)endGame('SHIP');}
 function chargeHits(){
   for(const c of charges){if(c.dead)continue;
-    if(inv===0&&hit({x:c.x-1,y:c.y-1,w:4,h:4},{x:sub.x,y:sub.y,w:12,h:5})){c.dead=true;lives--;boom(sub.x+6,sub.y+2,40,P.sub);beep(60,.6,'sawtooth',.1);inv=90;if(lives<=0)endGame('SHIP');}
+    if(inv===0&&hit({x:c.x-1,y:c.y-1,w:4,h:4},{x:sub.x,y:sub.y,w:12,h:5}))hitSub(c);
     else if(c.y>=BED-1){c.dead=true;boom(c.x,BED-1,6,P.bed);beep(120,.1,'triangle');}}
 }
 function update(){
   if(state!=='play'||paused){stepParts();return;}
   updateSub();
   if(mode===1)updateAiShips();else updateBoat();
+  updateItems();
   for(const c of charges)c.y+=c.v;
   for(const t of torps)t.y-=2;
   torpedoHits();
@@ -231,6 +310,17 @@ let tick=0;
 function drawHud(){
   if(mode===1){txt('SCORE '+score,2,8);txt('LV '+level,W/2,8,P.txt,'center');txt('SUBS '+lives,W-2,8,P.txt,'right');txt('HI '+hi,W/2,17,P.boom,'center');}
   else{txt('SUB '+lives,2,8,P.sub);txt('2P',W/2,8,P.txt,'center');txt('SHIP '+boatLives,W-2,8,P.boat,'right');}
+  if(state!=='play')return;
+  // sub's active power-ups sit on the seabed strip, the ship's under its life count
+  let x=2;
+  if(sub.shield){icon('shield',x,BED+1);x+=7;}
+  if(sub.twin>0){icon('twin',x,BED+1,sub.twin);x+=7;}
+  if(sub.rapid>0){icon('rapid',x,BED+1,sub.rapid);x+=7;}
+  if(mode===2){x=W-7;
+    if(boat.armor){icon('armor',x,11);x-=7;}
+    if(boat.cluster>0){icon('cluster',x,11,boat.cluster);x-=7;}
+    if(boat.rapid>0){icon('reload',x,11,boat.rapid);x-=7;}}
+  if(msg.t>0)txt(msg.text,W/2,36,msg.c,'center');
 }
 function drawOverlay(blinkOn){
   if(state==='title'){panel(38,56);txt('DEPTH RUNNER',W/2,51,P.sub,'center');
@@ -242,16 +332,27 @@ function drawOverlay(blinkOn){
     if(blinkOn)txt(touch()?'TAP TO RETRY':'PRESS ENTER',W/2,70,P.txt,'center');}
   if(paused&&state==='play'){panel(50,20);txt('PAUSED',W/2,63,P.txt,'center');}
 }
+function drawShieldRing(x,y,w,h){if((tick>>2)%3===0)return;ctx.fillStyle=P.def;ctx.fillRect(x+1,y,w-2,1);ctx.fillRect(x,y+1,1,h-2);ctx.fillRect(x+w-1,y+1,1,h-2);}
+function drawItems(){
+  for(const it of items){
+    const fading=it.life<90&&(tick>>2)%2,flash=(tick>>4)%2===0;
+    if(fading)continue;
+    const bob=it.owner==='ship'?((tick>>4)%2):0;
+    capsule(it.kind,it.x,it.y+bob,flash);
+  }
+}
 function draw(){
   ctx.fillStyle=P.sky;ctx.fillRect(0,0,W,SURF);
   const g=ctx.createLinearGradient(0,SURF,0,BED);g.addColorStop(0,P.sea);g.addColorStop(1,P.deep);ctx.fillStyle=g;ctx.fillRect(0,SURF,W,BED-SURF);
   ctx.fillStyle='#7869C4';for(let x=0;x<W;x+=4)ctx.fillRect(x+((tick/12|0)%4),SURF,2,1);
   ctx.fillStyle=P.bed;ctx.fillRect(0,BED,W,H-BED);
+  if(state!=='title')drawItems();
   for(const s of ships)spr(SHIP,s.x,s.y,P.ship,P.shipd);
-  if(mode===2&&state!=='title'&&boat.down===0&&!(state==='over'&&winner==='SUB')&&(boat.inv===0||(boat.inv>>2)%2))spr(BOAT,boat.x,boat.y,P.boat,P.boatd);
+  const boatVisible=mode===2&&state!=='title'&&boat.down===0&&!(state==='over'&&winner==='SUB');
+  if(boatVisible&&(boat.inv===0||(boat.inv>>2)%2)){spr(BOAT,boat.x,boat.y,P.boat,P.boatd);if(boat.armor)drawShieldRing(boat.x-2|0,boat.y-2,20,9);}
   ctx.fillStyle=P.chg;for(const c of charges){ctx.fillRect(c.x-1,c.y,3,2);ctx.fillRect(c.x,c.y-1,1,4);}
   ctx.fillStyle=P.tor;for(const t of torps)ctx.fillRect(t.x,t.y,2,4);
-  if(!(state==='over'&&lives<=0)&&(inv===0||(inv>>2)%2||state==='title'))spr(SUB,sub.x,sub.y,P.sub,P.subd);
+  if(!(state==='over'&&lives<=0)&&(inv===0||(inv>>2)%2||state==='title')){spr(SUB,sub.x,sub.y,P.sub,P.subd);if(sub.shield&&state==='play')drawShieldRing(sub.x-2|0,sub.y-2,16,8);}
   for(const p of parts){ctx.fillStyle=p.c;ctx.fillRect(p.x|0,p.y|0,1,1);}
   drawHud();
   drawOverlay((tick>>5)%2===0);

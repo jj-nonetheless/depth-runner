@@ -20,6 +20,25 @@ Press 1 or 2 (or use the mode buttons) to start. Enter restarts, P pauses, Esc g
 - **Ship (2 players)**: A / D to steer, S to drop a depth charge (one every ~2/3 second, 5 in the water at most)
 - On touch screens, on-screen buttons appear for the sub, and for the ship in 2 player mode.
 
+## Power-ups
+
+Colour shows the kind (cyan = defence, orange = weapon, yellow = speed); the letter says which.
+They turn up every 9–18 seconds at first, closer together as a game goes on.
+Losing a life loses any timed power-up.
+
+**Sub** — capsules sink from the surface and rest on the seabed for a few seconds; drive into one to collect it.
+
+- **S** Shield: blocks one depth charge hit
+- **T** Twin torpedoes: fires two at once, up to 6 on screen, for 10 seconds
+- **R** Rapid fire: much shorter reload, for 10 seconds
+- **+** Extra sub: rare, 1 player only, from level 2
+
+**Ship (2 players)** — buoys bob on the surface for a few seconds; drive over one to collect it.
+
+- **A** Armor: blocks one torpedo hit
+- **C** Cluster: drops 3 charges side by side, for 10 seconds
+- **R** Fast reload: for 10 seconds
+
 ## Scoring (1 player)
 
 - Depth charge: 10 points
