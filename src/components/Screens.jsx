@@ -1,10 +1,12 @@
 // Menus drawn over the game canvas: title, lobby, picking sides, results.
-import { Switch, Match, Show, For, onMount } from 'solid-js';
+import { Switch, Match, Show, For, onMount, createSignal } from 'solid-js';
 import {
-  screen, against, result, startSolo, goLobby, goCpuRoles, goTitle,
+  screen, against, result, startSolo, goLobby, goCpuRoles, goScores, goTitle,
   challenge, accept, decline, cancelChallenge, pickRole, setReady, playAgain,
 } from '../controller.js';
 import { net, mine, setNick, opponent, incoming, others } from '../net/room.js';
+import { board, saveShared } from '../net/scores.js';
+import Leaderboard from './Leaderboard.jsx';
 
 const focusFirst = (get) => onMount(() => get()?.querySelector('button')?.focus({ preventScroll: true }));
 
@@ -18,6 +20,7 @@ function Title() {
         <button onClick={startSolo}><kbd>1</kbd> 1 PLAYER</button>
         <button onClick={goLobby}><kbd>2</kbd> 2 PLAYERS ONLINE</button>
         <button onClick={goCpuRoles}><kbd>3</kbd> 2 PLAYERS VS COMPUTER</button>
+        <button onClick={goScores}><kbd>4</kbd> TOP 10</button>
       </div>
     </section>
   );
@@ -144,6 +147,61 @@ function Roles() {
   );
 }
 
+function Scores() {
+  let el;
+  focusFirst(() => el);
+  return (
+    <section class="panel scores-panel" ref={el} aria-label="Top 10">
+      <h2>TOP 10</h2>
+      <Leaderboard compact />
+      <div class="row">
+        <button class="go" onClick={startSolo}>PLAY 1 PLAYER</button>
+        <button onClick={goTitle}>BACK</button>
+      </div>
+    </section>
+  );
+}
+
+// 1 player results: where the score landed, and saving it to everyone's Top 10
+function SoloResult(props) {
+  const r = props.r;
+  const [name, setName] = createSignal(mine.nick);
+  const [state, setState] = createSignal('idle'); // idle | saving | saved | error
+  const [err, setErr] = createSignal('');
+  const canTry = () => r.sharedPlace > 0 && board.status === 'online' && board.canSave !== false;
+  const save = async () => {
+    if (state() === 'saving' || state() === 'saved') return;
+    setState('saving');
+    setNick(name());
+    const e = await saveShared(name(), r.score, r.level);
+    if (e) { setErr(e); setState('error'); } else setState('saved');
+  };
+  return (
+    <>
+      <h2 class="c-red">GAME OVER</h2>
+      <p class="big">SCORE {r.score}</p>
+      <Show when={canTry()} fallback={
+        <Show when={r.localPlace > 0} fallback={<p class="c-amber">HI {r.hi}</p>}>
+          <p class="c-amber">#{r.localPlace} ON THIS DEVICE’S TOP 10</p>
+        </Show>
+      }>
+        <Show when={state() !== 'saved'} fallback={<p class="c-amber">SAVED · #{r.sharedPlace} ON THE TOP 10</p>}>
+          <p class="c-amber">NEW TOP 10 SCORE · #{r.sharedPlace}</p>
+          <div class="row">
+            <label class="nick" for="score-name">NAME
+              <input id="score-name" maxlength="12" autocomplete="off" value={name()}
+                onInput={(e) => setName(e.currentTarget.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } }} />
+            </label>
+            <button class="go" disabled={state() === 'saving'} onClick={save}>{state() === 'saving' ? 'SAVING…' : 'SAVE'}</button>
+          </div>
+          <Show when={state() === 'error'}><p class="note">{err()}</p></Show>
+        </Show>
+      </Show>
+    </>
+  );
+}
+
 function Over() {
   let el;
   focusFirst(() => el);
@@ -151,20 +209,19 @@ function Over() {
   const online = () => against() === 'remote' && !r().oppLeft && !!opponent();
   return (
     <section class="panel over" ref={el}>
-      <Show when={r().mode === 1} fallback={
+      <Show when={r().mode === 1} keyed fallback={
         <>
           <h2 class={r().winner === 'SUB' ? 'c-sub' : 'c-boat'}>{r().winner} WINS!</h2>
           <p class={r().won ? 'big c-amber' : 'big c-red'}>{r().won ? 'YOU WIN' : 'YOU LOSE'}</p>
           <Show when={r().oppLeft}><p class="note">YOUR OPPONENT LEFT, SO THE COMPUTER FINISHED THE GAME.</p></Show>
         </>
       }>
-        <h2 class="c-red">GAME OVER</h2>
-        <p class="big">SCORE {r().score}</p>
-        <p class="c-amber">HI {r().hi}</p>
+        <SoloResult r={r()} />
       </Show>
       <div class="row">
         <Show when={r().mode === 1}>
           <button class="go" onClick={playAgain}>PLAY AGAIN</button>
+          <button onClick={goScores}>TOP 10</button>
         </Show>
         <Show when={r().mode === 2 && online()}>
           <button class="go" onClick={playAgain}>REMATCH</button>
@@ -190,6 +247,7 @@ export default function Screens() {
       <Match when={screen() === 'lobby'}><Lobby /></Match>
       <Match when={screen() === 'roles'}><Roles /></Match>
       <Match when={screen() === 'over'}><Over /></Match>
+      <Match when={screen() === 'scores'}><Scores /></Match>
     </Switch>
   );
 }

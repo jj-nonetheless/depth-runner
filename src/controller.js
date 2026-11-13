@@ -12,6 +12,7 @@ import { controls, idle } from './game/input.js';
 import { P } from './game/constants.js';
 import { draw } from './game/render.js';
 import { startJingle } from './game/sound.js';
+import { board, recordLocal, placeOn } from './net/scores.js';
 import {
   net, mine, setMine, sendPresence, opponent, declinedBy, peerGone, opponentPresence, challengeId,
 } from './net/room.js';
@@ -59,6 +60,12 @@ export function goCpuRoles() {
   setAgainst('cpu');
   setScreen('roles');
 }
+export function goScores() {
+  stopOnline();
+  S.phase = 'idle';
+  setMine({ st: 'title', inv: null, ready: false });
+  setScreen('scores');
+}
 function enterRoles() {
   S.phase = 'idle';
   setMine({ st: 'roles', ready: false });
@@ -105,13 +112,18 @@ function startOnline(o) {
 // ---------- end of a game
 function finish() {
   const oppLeft = S.mode === 2 && against() === 'remote' && S.opp === 'cpu';
+  const solo = S.mode === 1;
   setResult({
     mode: S.mode,
     winner: S.winner,
     won: S.mode === 2 && S.winner === S.myRole.toUpperCase(),
     score: S.score,
+    level: S.level,
     hi: S.hi,
     oppLeft,
+    // where this score lands: on everyone's Top 10 (before saving) and on this device's (saved now)
+    sharedPlace: solo && board.status === 'online' ? placeOn(board.shared, S.score) : 0,
+    localPlace: solo ? recordLocal(mine.nick, S.score, S.level) : 0,
   });
   setMine({ st: 'over', ready: false });
   setScreen('over');

@@ -3,10 +3,12 @@ import { attach } from './game/render.js';
 import { press, releaseAll } from './game/input.js';
 import { S } from './game/engine.js';
 import { connect } from './net/room.js';
-import { screen, startLoop, startSolo, goLobby, goCpuRoles, goTitle, playAgain, leaveGame, notice } from './controller.js';
+import { connectScores } from './net/scores.js';
+import { screen, startLoop, startSolo, goLobby, goCpuRoles, goScores, goTitle, playAgain, leaveGame, notice } from './controller.js';
 import Screens from './components/Screens.jsx';
 import Pads from './components/Pads.jsx';
 import Rules from './components/Rules.jsx';
+import Leaderboard from './components/Leaderboard.jsx';
 
 const GAME_KEYS = ['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
 
@@ -16,6 +18,7 @@ export default function App() {
     attach(canvas);
     startLoop();
     connect();
+    connectScores();
   });
 
   const typing = (e) => e.target instanceof HTMLInputElement;
@@ -34,6 +37,7 @@ export default function App() {
       if (e.code === 'Digit1') startSolo();
       if (e.code === 'Digit2') goLobby();
       if (e.code === 'Digit3') goCpuRoles();
+      if (e.code === 'Digit4') goScores();
     }
     if (s === 'over' && e.code === 'Enter' && !(e.target instanceof HTMLButtonElement)) playAgain();
   };
@@ -67,6 +71,11 @@ export default function App() {
       <Show when={screen() === 'play'}>
         <Pads />
       </Show>
+
+      <section class="top10" aria-labelledby="top10-h">
+        <h2 id="top10-h">Top 10</h2>
+        <Leaderboard />
+      </section>
 
       <Rules />
     </div>

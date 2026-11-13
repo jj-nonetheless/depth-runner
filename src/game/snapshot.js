@@ -1,7 +1,7 @@
 // What the online host (the sub player's page) shares about the game, and how the
 // other page copies it in. Everything arriving here came from another viewer's page:
 // numbers are clamped, kinds are checked against known lists, and no text is shown from it.
-import { W, H, PU } from './constants.js';
+import { W, H, PU, CAP } from './constants.js';
 import { S, FX } from './engine.js';
 
 const r1 = (v) => Math.round(v * 10) / 10;
@@ -43,7 +43,7 @@ export function apply(s, guest) {
   S.charges = list(s.c, 16).map((a) => ({ x: N(a?.[0], -4, W + 4), y: N(a?.[1], 0, H), v: 0.65 }));
   S.torps = list(s.tp, 8).map((a) => ({ x: N(a?.[0], 0, W), y: N(a?.[1], 0, H) }));
   S.items = list(s.it, 8).filter((a) => Array.isArray(a) && has(PU, a[1]))
-    .map((a) => ({ owner: a[0] ? 'ship' : 'sub', kind: a[1], x: N(a[2], 0, W - 7), y: N(a[3], 0, H - 7), life: N(a[4], 0, 999) }));
+    .map((a) => ({ owner: a[0] ? 'ship' : 'sub', kind: a[1], x: N(a[2], 0, W - CAP), y: N(a[3], 0, H - CAP), life: N(a[4], 0, 999) }));
   if (Array.isArray(s.m) && has(PU, s.m[0])) {
     const o = s.m[1] === 'ship' ? 'ship' : 'sub';
     S.msg = { text: (o === 'ship' ? 'SHIP ' : '') + PU[s.m[0]].name, c: PU[s.m[0]].c, t: N(s.m[2], 0, 90), k: s.m[0], o };

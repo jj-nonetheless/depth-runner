@@ -1,5 +1,5 @@
 // Draws the playfield and the in-game HUD. Menus and the lobby are Solid components on top.
-import { W, H, SURF, BED, P, SUB, SHIP, BOAT, GLYPH, PU } from './constants.js';
+import { W, H, SURF, BED, P, SUB, SHIP, BOAT, ICON, PU } from './constants.js';
 import { S } from './engine.js';
 
 let ctx;
@@ -13,26 +13,26 @@ function spr(a, x, y, c, c2) {
     }
   }
 }
-function glyph(g, x, y, c) {
+function pixels(k, x, y, c) {
   ctx.fillStyle = c;
-  const a = GLYPH[g];
-  for (let r = 0; r < 5; r++) for (let i = 0; i < 3; i++) if (a[r][i] === '#') ctx.fillRect(x + i, y + r, 1, 1);
+  const a = ICON[k];
+  for (let r = 0; r < 7; r++) for (let i = 0; i < 7; i++) if (a[r][i] === '#') ctx.fillRect(x + i, y + r, 1, 1);
 }
+// a rounded 9x9 capsule in the power-up's colour with its icon cut out in dark pixels
 function capsule(k, x, y, flash) {
-  const p = PU[k];
+  const c = PU[k].c;
   x |= 0; y |= 0;
-  ctx.fillStyle = flash ? '#FFFFFF' : p.c;
-  ctx.fillRect(x + 1, y, 5, 7);
-  ctx.fillRect(x, y + 1, 7, 5);
-  ctx.fillStyle = p.c;
-  ctx.fillRect(x + 1, y + 1, 5, 5);
-  glyph(p.g, x + 2, y + 1, P.dark);
+  ctx.fillStyle = flash ? '#FFFFFF' : c;
+  ctx.fillRect(x + 1, y, 7, 9);
+  ctx.fillRect(x, y + 1, 9, 7);
+  ctx.fillStyle = c;
+  ctx.fillRect(x + 1, y + 1, 7, 7);
+  pixels(k, x + 1, y + 1, P.dark);
 }
+// HUD: the icon on its own, in its colour; blinks while a timed one runs out
 function icon(k, x, y, left) {
-  if (left !== undefined && left < 120 && (tick >> 3) % 2) return; // blink while running out
-  ctx.fillStyle = PU[k].c;
-  ctx.fillRect(x, y, 5, 7);
-  glyph(PU[k].g, x + 1, y + 1, P.dark);
+  if (left !== undefined && left < 120 && (tick >> 3) % 2) return;
+  pixels(k, x, y, PU[k].c);
 }
 function txt(s, x, y, c = P.txt, a = 'left') {
   ctx.fillStyle = c;
@@ -64,14 +64,14 @@ function drawHud() {
   if (S.phase !== 'play') return;
   // the sub's active power-ups sit on the seabed strip, the ship's under its life count
   let x = 2;
-  if (sub.shield) { icon('shield', x, BED + 1); x += 7; }
-  if (sub.twin > 0) { icon('twin', x, BED + 1, sub.twin); x += 7; }
-  if (sub.rapid > 0) { icon('rapid', x, BED + 1, sub.rapid); x += 7; }
+  if (sub.shield) { icon('shield', x, BED + 1); x += 9; }
+  if (sub.twin > 0) { icon('twin', x, BED + 1, sub.twin); x += 9; }
+  if (sub.rapid > 0) { icon('rapid', x, BED + 1, sub.rapid); x += 9; }
   if (S.mode === 2) {
-    x = W - 7;
-    if (boat.armor) { icon('armor', x, 11); x -= 7; }
-    if (boat.cluster > 0) { icon('cluster', x, 11, boat.cluster); x -= 7; }
-    if (boat.rapid > 0) { icon('reload', x, 11, boat.rapid); x -= 7; }
+    x = W - 9;
+    if (boat.armor) { icon('armor', x, 10); x -= 9; }
+    if (boat.cluster > 0) { icon('cluster', x, 10, boat.cluster); x -= 9; }
+    if (boat.rapid > 0) { icon('reload', x, 10, boat.rapid); x -= 9; }
   }
   if (S.msg.t > 0) txt(S.msg.text, W / 2, 36, S.msg.c, 'center');
   if (S.paused) {

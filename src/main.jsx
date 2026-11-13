@@ -5,10 +5,11 @@ import * as engine from './game/engine.js';
 import * as controller from './controller.js';
 import * as room from './net/room.js';
 import { encode } from './game/snapshot.js';
+import * as scores from './net/scores.js';
 
 render(() => <App />, document.getElementById('root'));
 
 // Hook for the browser tests (tests/*.mjs); only present when the URL has ?test.
 if (new URLSearchParams(location.search).has('test')) {
-  window.__dr = { ...engine, ...controller, ...room, encode };
+  window.__dr = { ...engine, ...controller, ...room, ...scores, encode };
 }

@@ -1,4 +1,6 @@
 // How to play, shown under the game.
+import PixelIcon from './PixelIcon.jsx';
+
 export default function Rules() {
   return (
     <>
@@ -17,18 +19,18 @@ export default function Rules() {
           <h2>Power-ups</h2>
           <h3 class="s">Sub: catch capsules as they sink</h3>
           <dl>
-            <dt><span class="cap def">S</span></dt><dd>Shield: blocks one hit</dd>
-            <dt><span class="cap off">T</span></dt><dd>Twin torpedoes, 10 sec</dd>
-            <dt><span class="cap spd">R</span></dt><dd>Rapid fire, 10 sec</dd>
-            <dt><span class="cap life">+</span></dt><dd>Extra sub (rare, 1 player, level 2+)</dd>
+            <dt><PixelIcon kind="shield" /></dt><dd>Shield: blocks one hit</dd>
+            <dt><PixelIcon kind="twin" /></dt><dd>Twin torpedoes, 10 sec</dd>
+            <dt><PixelIcon kind="rapid" /></dt><dd>Rapid fire, 10 sec</dd>
+            <dt><PixelIcon kind="life" /></dt><dd>Extra sub (rare, 1 player, level 2+)</dd>
           </dl>
           <h3 class="b">Ship: drive over buoys</h3>
           <dl>
-            <dt><span class="cap def">A</span></dt><dd>Armor: blocks one torpedo</dd>
-            <dt><span class="cap off">C</span></dt><dd>Cluster: 3 charges per drop, 10 sec</dd>
-            <dt><span class="cap spd">R</span></dt><dd>Fast reload, 10 sec</dd>
+            <dt><PixelIcon kind="armor" /></dt><dd>Armor: blocks one torpedo</dd>
+            <dt><PixelIcon kind="cluster" /></dt><dd>Cluster: 3 charges per drop, 10 sec</dd>
+            <dt><PixelIcon kind="reload" /></dt><dd>Fast reload, 10 sec</dd>
           </dl>
-          <p class="note">They turn up more often the longer a game runs. Losing a life loses timed power-ups.</p>
+          <p class="note">Colour shows the kind: cyan defence, orange weapons, yellow speed. They turn up more often the longer a game runs. Losing a life loses timed power-ups.</p>
         </section>
         <section>
           <h2>1 Player</h2>

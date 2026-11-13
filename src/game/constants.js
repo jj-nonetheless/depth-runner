@@ -16,24 +16,28 @@ export const SUB = ['....##......', '...####.....', '.##########.', '###########
 export const SHIP = ['.......#........', '......###.......', '..############..', '################', '.##############.', '..############..'];
 export const BOAT = ['.....#..........', '....###...#.....', '..###########...', '################', '.##############.', '..############..'];
 
-// Power-ups: colour is the category (cyan defence, orange weapon, yellow speed), the letter says which one.
-export const GLYPH = {
-  S: ['###', '#..', '###', '..#', '###'],
-  T: ['###', '.#.', '.#.', '.#.', '.#.'],
-  R: ['##.', '#.#', '##.', '#.#', '#.#'],
-  '+': ['...', '.#.', '###', '.#.', '...'],
-  C: ['###', '#..', '#..', '#..', '###'],
-  A: ['.#.', '#.#', '###', '#.#', '#.#'],
+// Power-ups: colour is the category (cyan defence, orange weapon, yellow speed); a 7x7 pixel icon says which.
+// '#' pixels are drawn dark on the coloured capsule (or in the colour itself in the HUD).
+export const ICON = {
+  shield: ['#######', '#.....#', '#.....#', '#.....#', '.#...#.', '..#.#..', '...#...'],
+  twin: ['.#...#.', '###.###', '###.###', '###.###', '###.###', '###.###', '#.#.#.#'],
+  rapid: ['....##.', '...##..', '..##...', '.######', '...##..', '..##...', '.##....'],
+  life: ['.......', '.##.##.', '#######', '#######', '.#####.', '..###..', '...#...'],
+  armor: ['.......', '#######', '#.#.#.#', '#######', '#.#.#.#', '#######', '.......'],
+  cluster: ['...#...', '..###..', '...#...', '.#...#.', '###.###', '.#...#.', '.......'],
+  reload: ['#######', '.#...#.', '..#.#..', '...#...', '..###..', '.#####.', '#######'],
 };
 
 export const PU = {
-  shield: { g: 'S', c: '#6CD2E6', name: 'SHIELD' },
-  twin: { g: 'T', c: '#F0A040', name: 'TWIN TORPS', dur: 600 },
-  rapid: { g: 'R', c: '#F0E060', name: 'RAPID FIRE', dur: 600 },
-  life: { g: '+', c: '#B8C76F', name: 'EXTRA SUB' },
-  armor: { g: 'A', c: '#6CD2E6', name: 'ARMOR' },
-  cluster: { g: 'C', c: '#F0A040', name: 'CLUSTER', dur: 600 },
-  reload: { g: 'R', c: '#F0E060', name: 'FAST RELOAD', dur: 600 },
+  shield: { c: '#6CD2E6', name: 'SHIELD' },
+  twin: { c: '#F0A040', name: 'TWIN TORPS', dur: 600 },
+  rapid: { c: '#F0E060', name: 'RAPID FIRE', dur: 600 },
+  life: { c: '#B8C76F', name: 'EXTRA SUB' },
+  armor: { c: '#6CD2E6', name: 'ARMOR' },
+  cluster: { c: '#F0A040', name: 'CLUSTER', dur: 600 },
+  reload: { c: '#F0E060', name: 'FAST RELOAD', dur: 600 },
 };
+/** Capsules and buoys are 9x9 pixels. */
+export const CAP = 9;
 
 export const SHIP_TABLE = [['armor', 30], ['cluster', 35], ['reload', 35]];

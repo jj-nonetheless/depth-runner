@@ -1,4 +1,4 @@
-// Builds nothing: run `npm run build` first. Serves dist/ and runs both browser suites.
+// Builds nothing: run `npm run build` first. Serves dist/ and runs the browser suites.
 import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
@@ -16,7 +16,7 @@ await new Promise((r) => server.once('listening', r));
 const url = `http://127.0.0.1:${server.address().port}/?test`;
 
 let failed = false;
-for (const suite of ['tests/solo.mjs', 'tests/online.mjs']) {
+for (const suite of ['tests/solo.mjs', 'tests/online.mjs', 'tests/scores.mjs']) {
   console.log(`\n== ${suite}`);
   // async on purpose: a blocking spawn would stall this process's test server
   const code = await new Promise((r) => spawn(process.execPath, [suite, url], { stdio: 'inherit' }).on('exit', r));

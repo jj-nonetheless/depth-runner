@@ -1,6 +1,6 @@
 // Game state and rules. Plain mutable objects, stepped 60 times a second; the UI reads
 // `S.phase` and the canvas renderer reads the rest.
-import { W, SURF, BED, P, PU, SHIP_TABLE } from './constants.js';
+import { W, SURF, BED, P, PU, SHIP_TABLE, CAP } from './constants.js';
 import { beep, jingle, levelJingle, winJingle } from './sound.js';
 
 export const S = {
@@ -96,8 +96,8 @@ function subTable() {
   return t;
 }
 export function spawnItem(owner, kind, x) {
-  if (owner === 'sub') S.items.push({ owner, kind, x: x ?? 4 + Math.random() * (W - 15), y: SURF + 2, v: 0.4, life: 300 });
-  else S.items.push({ owner, kind, x: x ?? 8 + Math.random() * (W - 23), y: SURF - 6, v: 0, life: 360 });
+  if (owner === 'sub') S.items.push({ owner, kind, x: x ?? 4 + Math.random() * (W - 8 - CAP), y: SURF + 2, v: 0.4, life: 300 });
+  else S.items.push({ owner, kind, x: x ?? 8 + Math.random() * (W - 16 - CAP), y: SURF - 8, v: 0, life: 360 });
 }
 export function applySub(k) {
   const p = PU[k];
@@ -121,9 +121,9 @@ function updateItems() {
   if (S.mode === 2 && --S.puShip <= 0) { spawnItem('ship', pick(SHIP_TABLE)); S.puShip = puGap(); }
   const subBox = { x: S.sub.x, y: S.sub.y, w: 12, h: 5 };
   for (const it of S.items) {
-    const box = { x: it.x, y: it.y, w: 7, h: 7 };
+    const box = { x: it.x, y: it.y, w: CAP, h: CAP };
     if (it.owner === 'sub') {
-      if (it.y < BED - 7) it.y = Math.min(BED - 7, it.y + it.v); else it.life--;
+      if (it.y < BED - CAP) it.y = Math.min(BED - CAP, it.y + it.v); else it.life--;
       if (hit(subBox, box)) { it.dead = true; applySub(it.kind); }
     } else {
       it.life--;
