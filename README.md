@@ -10,15 +10,26 @@ Open `index.html` in any modern browser. No install or build step.
 ## Modes
 
 - **1 player**: the sub against computer-run ships.
-- **2 players**: one player is the sub, the other drives a destroyer on the surface and drops the charges.
+- **2 players**: pick a side, sub or ship. The game looks for someone else with the page open who picked the
+  other side and connects you. If nobody turns up within 15 seconds (or you press C), the computer plays the
+  other side. If your opponent leaves mid-game, the computer takes over their side.
 
-Press 1 or 2 (or use the mode buttons) to start. Enter restarts, P pauses, Esc goes back to the title.
+Online play uses the claude.ai artifact `room` capability, so it only works when the page is opened on claude.ai
+by people who are signed in and have access to it. Anywhere else (a public link, or `index.html` opened
+straight from disk) 2 players goes straight to playing the computer.
+
+How the online game works: the sub player's browser runs the game and shares a snapshot of it about 30 times a
+second; the ship player's browser sends its key presses and draws the snapshots it receives.
 
 ## Controls
 
-- **Sub**: Left / Right to steer (A / D also work in 1 player), Up or Space to fire (up to 3 torpedoes on screen)
-- **Ship (2 players)**: A / D to steer, S to drop a depth charge (one every ~2/3 second, 5 in the water at most)
-- On touch screens, on-screen buttons appear for the sub, and for the ship in 2 player mode.
+- **← / →** (or A / D): steer
+- **Space**: the sub fires a torpedo (also ↑); the ship drops a depth charge (also S)
+- **1 / 2**: 1 player, or choose a side for 2 players
+- **Enter**: start, or play again / rematch
+- **C**: while waiting for player 2, play the computer now
+- **P**: pause (not in online games) — **Esc**: back to the title
+- On touch screens, on-screen ← → and FIRE/DROP buttons appear.
 
 ## Power-ups
 
@@ -50,9 +61,12 @@ Losing a life loses any timed power-up.
 
 Each side has 3 lives. The sub wins by torpedoing the ship 3 times; the ship wins by hitting the sub 3 times.
 A sunk ship comes back from one edge of the screen after a short pause.
-
 ## Test
 
-A headless browser smoke test (needs Playwright):
+Headless browser tests (need Playwright):
 
     node tests/smoke.js "$PWD/index.html"
+
+    # online play: serve the folder, then two tabs share a stand-in for the room capability
+    python3 -m http.server 8765 &
+    node tests/net-smoke.js http://127.0.0.1:8765/index.html tests/mockroom.js
