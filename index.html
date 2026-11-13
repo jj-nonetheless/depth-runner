@@ -4,32 +4,42 @@
 <style>
 /* Layout: one C64 "screen" — light-blue border frame around the game canvas, READY-prompt style text below. Deliberately single-theme (dark). */
 :root{
-  --border:#6C5EB5; --screen:#352879; --ink:#A59FF0; --bright:#FFFFFF; --amber:#C3B15F; --sub:#B8C76F; --void:#14102E;
+  --border:#6C5EB5; --screen:#352879; --ink:#A59FF0; --bright:#FFFFFF; --amber:#C3B15F; --sub:#B8C76F; --boat:#E08070; --void:#14102E;
   --display:"Press Start 2P", ui-monospace, monospace;
   --body:"VT323", ui-monospace, "Courier New", monospace;
   color-scheme:dark;
 }
 html,body{background:var(--void);color:var(--ink)}
 body{font-family:var(--body);font-size:22px;line-height:1.25;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 40px}
-.wrap{max-width:840px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+.wrap{max-width:840px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
 header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px}
 h1{font-family:var(--display);font-size:clamp(18px,4.2vw,30px);color:var(--bright);margin:0;letter-spacing:.04em;text-shadow:3px 3px 0 var(--border);text-wrap:balance}
 .load{font-family:var(--body);color:var(--ink);margin:0;font-size:20px}
 .load b{color:var(--amber);font-weight:normal}
+.modes{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.modes span{font-family:var(--display);font-size:11px;letter-spacing:.08em;color:var(--ink)}
+.mode{font-family:var(--display);font-size:12px;color:var(--ink);background:transparent;border:3px solid var(--border);padding:10px 14px;cursor:pointer}
+.mode[aria-pressed="true"]{background:var(--border);color:var(--bright)}
 .frame{background:var(--border);padding:clamp(10px,2.4vw,24px);box-shadow:0 0 0 2px #000,0 18px 60px rgba(108,94,181,.25)}
 .screen{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;background:var(--screen)}
 canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
 .screen::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(0,0,0,.12) 0 1px,transparent 1px 3px)}
-.pads{display:none;gap:12px;justify-content:space-between}
+.pads{display:none;gap:12px;justify-content:space-between;align-items:center}
 .pads .grp{display:flex;gap:12px}
-.pad{font-family:var(--display);font-size:14px;color:var(--bright);background:var(--screen);border:3px solid var(--border);min-width:72px;min-height:64px;padding:0 14px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+.pads .who{font-family:var(--display);font-size:10px}
+.pad{font-family:var(--display);font-size:14px;color:var(--bright);background:var(--screen);border:3px solid var(--border);min-width:64px;min-height:60px;padding:0 12px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
 .pad:active,.pad.on{background:var(--border)}
 .pad.fire{color:var(--void);background:var(--amber);border-color:var(--amber)}
 .pad.fire:active,.pad.fire.on{background:var(--bright)}
-@media (pointer:coarse){.pads{display:flex}}
+.pads.boat .pad{border-color:var(--boat)}
+.pads.boat .pad.fire{background:var(--boat);border-color:var(--boat)}
+.pads.boat .who{color:var(--boat)} .pads.sub .who{color:var(--sub)}
+@media (pointer:coarse){.pads.sub{display:flex} body.two .pads.boat{display:flex}}
 .info{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px}
 .info section{min-width:0}
 h2{font-family:var(--display);font-size:12px;color:var(--amber);letter-spacing:.08em;margin:0 0 12px;text-transform:uppercase}
+h3{font-family:var(--display);font-size:10px;letter-spacing:.08em;margin:16px 0 8px;font-weight:normal}
+h3.s{color:var(--sub)} h3.b{color:var(--boat)}
 dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 16px}
 dt{color:var(--bright)}
 dd{margin:0}
@@ -48,47 +58,80 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
     <p class="load">LOAD "DEPTH RUNNER",1 &nbsp;<b>READY.</b> <span class="cursor"></span></p>
   </header>
 
+  <div class="modes" role="group" aria-label="Game mode">
+    <span>MODE</span>
+    <button class="mode" id="m1" aria-pressed="true">1 PLAYER</button>
+    <button class="mode" id="m2" aria-pressed="false">2 PLAYERS</button>
+  </div>
+
+  <div class="pads boat" aria-label="Ship touch controls">
+    <div class="grp">
+      <button class="pad" id="bl" aria-label="Move ship left">&larr;</button>
+      <button class="pad" id="br" aria-label="Move ship right">&rarr;</button>
+    </div>
+    <span class="who">SHIP</span>
+    <button class="pad fire" id="bd">DROP</button>
+  </div>
+
   <div class="frame">
     <div class="screen"><canvas id="c" width="160" height="120" aria-label="Depth Runner game screen"></canvas></div>
   </div>
 
-  <div class="pads" aria-label="Touch controls">
+  <div class="pads sub" aria-label="Sub touch controls">
     <div class="grp">
-      <button class="pad" id="pl" aria-label="Move left">&larr;</button>
-      <button class="pad" id="pr" aria-label="Move right">&rarr;</button>
+      <button class="pad" id="pl" aria-label="Move sub left">&larr;</button>
+      <button class="pad" id="pr" aria-label="Move sub right">&rarr;</button>
     </div>
+    <span class="who">SUB</span>
     <button class="pad fire" id="pf">FIRE</button>
   </div>
 
   <div class="info">
     <section>
       <h2>Controls</h2>
+      <h3 class="s">Sub</h3>
       <dl>
-        <dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd></dt><dd>Steer the sub (or A / D)</dd>
-        <dt><kbd>SPACE</kbd></dt><dd>Fire a torpedo, up to 3 at once</dd>
-        <dt><kbd>ENTER</kbd></dt><dd>Start, or restart after game over</dd>
-        <dt><kbd>P</kbd></dt><dd>Pause</dd>
+        <dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd></dt><dd>Steer (A / D also work in 1 player)</dd>
+        <dt><kbd>&uarr;</kbd> <kbd>SPACE</kbd></dt><dd>Fire a torpedo, up to 3 at once</dd>
+      </dl>
+      <h3 class="b">Ship (2 players)</h3>
+      <dl>
+        <dt><kbd>A</kbd> <kbd>D</kbd></dt><dd>Steer along the surface</dd>
+        <dt><kbd>S</kbd></dt><dd>Drop a depth charge</dd>
+      </dl>
+      <h3>Game</h3>
+      <dl>
+        <dt><kbd>1</kbd> <kbd>2</kbd></dt><dd>Start 1 or 2 player game</dd>
+        <dt><kbd>ENTER</kbd></dt><dd>Start or restart</dd>
+        <dt><kbd>P</kbd> <kbd>ESC</kbd></dt><dd>Pause / back to title</dd>
       </dl>
     </section>
     <section>
-      <h2>Scoring</h2>
+      <h2>1 Player</h2>
       <dl>
         <dt>Depth charge</dt><dd class="pts">10 PTS</dd>
         <dt>Ship sunk</dt><dd class="pts">100 PTS</dd>
         <dt>Every 8 ships</dt><dd>Level up: faster ships, more charges</dd>
         <dt>Subs</dt><dd>3 to start</dd>
       </dl>
+      <h2 style="margin-top:24px">2 Players</h2>
+      <dl>
+        <dt>Sub</dt><dd>3 subs. Torpedo the ship 3 times to win.</dd>
+        <dt>Ship</dt><dd>3 ships. Hit the sub 3 times to win.</dd>
+        <dt>Reload</dt><dd>One charge at a time, 5 in the water at most</dd>
+      </dl>
     </section>
   </div>
-  <p class="note">Ships cross the surface and roll depth charges down on you. Shoot the charges on the way down, or put a torpedo through the hull and stop them at the source. A remake of a half-remembered cassette game.</p>
+  <p class="note">Ships cross the surface and roll depth charges down on you. Shoot the charges on the way down, or put a torpedo through the hull and stop them at the source. In 2 player mode a friend takes the helm of the destroyer. A remake of a half-remembered cassette game.</p>
 </div>
 
 <script>
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 const W=160,H=120,SURF=22,BED=H-8;
-const P={sky:'#352879',sea:'#40318D',deep:'#2A1F6B',bed:'#68372B',sub:'#B8C76F',subd:'#588D43',ship:'#9F9F9F',shipd:'#444444',chg:'#000000',tor:'#FFFFFF',boom:'#C3B15F',red:'#9A6759',txt:'#FFFFFF'};
+const P={sky:'#352879',sea:'#40318D',deep:'#2A1F6B',bed:'#68372B',sub:'#B8C76F',subd:'#588D43',ship:'#9F9F9F',shipd:'#444444',boat:'#E08070',boatd:'#8B3A3A',chg:'#000000',tor:'#FFFFFF',boom:'#C3B15F',red:'#9A6759',txt:'#FFFFFF'};
 const SUB=['....##......','...####.....','.##########.','############','.##########.'];
 const SHIP=['.......#........','......###.......','..############..','################','.##############.','..############..'];
+const BOAT=['.....#..........','....###...#.....','..###########...','################','.##############.','..############..'];
 function spr(a,x,y,c,c2){for(let r=0;r<a.length;r++)for(let i=0;i<a[r].length;i++)if(a[r][i]==='#'){ctx.fillStyle=(r===a.length-1&&c2)?c2:c;ctx.fillRect((x+i)|0,(y+r)|0,1,1);}}
 
 let ac;function beep(f,d,t='square',v=.05){try{ac=ac||new AudioContext();if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.stop(ac.currentTime+d);}catch(e){}}
@@ -97,71 +140,121 @@ let hi=0;try{hi=+localStorage.getItem('depthrunner.hi')||0}catch(e){}
 function saveHi(){try{localStorage.setItem('depthrunner.hi',hi)}catch(e){}}
 
 const keys={};
-let state='title',paused=false;
-function startOrRestart(){if(state!=='play'){reset();state='play';paused=false;beep(440,.1);setTimeout(()=>beep(660,.12),90);}}
+let state='title',paused=false,mode=1,winner='';
+function setMode(m){mode=m;document.body.classList.toggle('two',m===2);
+  document.getElementById('m1').setAttribute('aria-pressed',m===1);document.getElementById('m2').setAttribute('aria-pressed',m===2);}
+function start(m){if(m)setMode(m);reset();state='play';paused=false;beep(440,.1);setTimeout(()=>beep(660,.12),90);}
 onkeydown=e=>{
   if(['Space','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();
   keys[e.code]=true;
-  if(e.code==='Enter'||(state==='title'&&e.code==='Space'))startOrRestart();
-  if(e.code==='KeyP'&&state==='play')paused=!paused;
+  if(state!=='play'){
+    if(e.code==='Digit1'||e.code==='Numpad1')start(1);
+    else if(e.code==='Digit2'||e.code==='Numpad2')start(2);
+    else if(state==='title'&&(e.code==='ArrowUp'||e.code==='ArrowDown'))setMode(mode===1?2:1);
+    else if(e.code==='Enter')start();
+  }else{
+    if(e.code==='KeyP')paused=!paused;
+    if(e.code==='Escape'){state='title';paused=false;}
+  }
 };
 onkeyup=e=>keys[e.code]=false;
 onblur=()=>{for(const k in keys)keys[k]=false;};
-cv.addEventListener('pointerdown',()=>{if(state!=='play')startOrRestart();});
+cv.addEventListener('pointerdown',()=>{if(state!=='play')start();});
+document.getElementById('m1').onclick=()=>start(1);
+document.getElementById('m2').onclick=()=>start(2);
 
 function bindPad(id,code){const b=document.getElementById(id);
-  const on=e=>{e.preventDefault();keys[code]=true;b.classList.add('on');if(state!=='play'&&code==='Space')startOrRestart();};
+  const on=e=>{e.preventDefault();keys[code]=true;b.classList.add('on');if(state!=='play'&&id==='pf')start();};
   const off=()=>{keys[code]=false;b.classList.remove('on');};
   b.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(t=>b.addEventListener(t,off));}
-bindPad('pl','ArrowLeft');bindPad('pr','ArrowRight');bindPad('pf','Space');
+bindPad('pl','ArrowLeft');bindPad('pr','ArrowRight');bindPad('pf','ArrowUp');
+bindPad('bl','KeyA');bindPad('br','KeyD');bindPad('bd','KeyS');
 
-let sub,ships,charges,torps,parts,score,lives,level,sunk,cool,inv,spawn;
-function reset(){sub={x:74,y:BED-6};ships=[];charges=[];torps=[];parts=[];score=0;lives=3;level=1;sunk=0;cool=0;inv=60;spawn=30;}
+let sub,ships,charges,torps,parts,score,lives,level,sunk,cool,inv,spawn,boat,boatLives;
+function reset(){sub={x:74,y:BED-6};ships=[];charges=[];torps=[];parts=[];score=0;lives=3;level=1;sunk=0;cool=0;inv=60;spawn=30;winner='';
+  boatLives=3;boat={x:72,y:SURF-5,cool:30,down:0,inv:60};}
 function boom(x,y,n,c){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,l:20+Math.random()*20,c});}
 function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+function stepParts(){for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.l--;}parts=parts.filter(p=>p.l>0);}
+function endGame(w){state='over';winner=w;if(mode===1&&score>hi){hi=score;saveHi();}
+  if(mode===2){beep(523,.12);setTimeout(()=>beep(659,.12),120);setTimeout(()=>beep(784,.25),240);}}
 
+function updateSub(){
+  const L=keys.ArrowLeft||(mode===1&&keys.KeyA),R=keys.ArrowRight||(mode===1&&keys.KeyD);
+  if(L)sub.x-=1.2;if(R)sub.x+=1.2;
+  sub.x=Math.max(0,Math.min(W-12,sub.x));
+  if(cool>0)cool--;
+  if((keys.Space||keys.ArrowUp)&&cool===0&&torps.length<3){torps.push({x:sub.x+4,y:sub.y-2});cool=15;beep(880,.08);}
+  if(inv>0)inv--;
+}
+function updateAiShips(){
+  if(--spawn<=0){const l=Math.random()<.5;ships.push({x:l?-16:W,y:SURF-5,v:(l?1:-1)*(.3+Math.random()*.3+level*.08)});spawn=Math.max(40,120-level*10)+Math.random()*60;}
+  for(const s of ships){s.x+=s.v;if(s.x>4&&s.x<W-20&&Math.random()<.006+level*.002){charges.push({x:s.x+7,y:SURF+1,v:.35+level*.05+Math.random()*.2});beep(200,.1,'triangle');}}
+  ships=ships.filter(s=>s.x>-20&&s.x<W+20);
+}
+function updateBoat(){
+  if(boat.down>0){if(--boat.down===0){boat.x=Math.random()<.5?0:W-16;boat.inv=90;}return;}
+  if(keys.KeyA)boat.x-=1;if(keys.KeyD)boat.x+=1;
+  boat.x=Math.max(0,Math.min(W-16,boat.x));
+  if(boat.cool>0)boat.cool--;if(boat.inv>0)boat.inv--;
+  if(keys.KeyS&&boat.cool===0&&charges.length<5){charges.push({x:boat.x+7,y:SURF+1,v:.65});boat.cool=40;beep(200,.1,'triangle');}
+}
+function torpedoHits(){
+  for(const t of torps){const tb={x:t.x,y:t.y,w:2,h:4};
+    for(const c of charges)if(!c.dead&&!t.dead&&hit(tb,{x:c.x-1,y:c.y-1,w:4,h:4})){c.dead=t.dead=true;score+=10;boom(c.x,c.y,8,P.boom);beep(300,.15,'sawtooth');}
+    for(const s of ships)if(!s.dead&&!t.dead&&hit(tb,{x:s.x,y:s.y,w:16,h:6})){s.dead=t.dead=true;score+=100;sunk++;boom(s.x+8,s.y+3,30,P.boom);boom(s.x+8,s.y+3,15,P.red);beep(90,.4,'sawtooth',.08);if(sunk%8===0){level++;beep(523,.1);setTimeout(()=>beep(784,.15),100);}}
+    if(mode===2&&boat.down===0&&boat.inv===0&&!t.dead&&hit(tb,{x:boat.x,y:boat.y,w:16,h:6})){t.dead=true;boatLives--;boom(boat.x+8,boat.y+3,30,P.boom);boom(boat.x+8,boat.y+3,15,P.boat);beep(90,.4,'sawtooth',.08);
+      if(boatLives<=0)endGame('SUB');else boat.down=90;}
+  }
+}
+function chargeHits(){
+  for(const c of charges){if(c.dead)continue;
+    if(inv===0&&hit({x:c.x-1,y:c.y-1,w:4,h:4},{x:sub.x,y:sub.y,w:12,h:5})){c.dead=true;lives--;boom(sub.x+6,sub.y+2,40,P.sub);beep(60,.6,'sawtooth',.1);inv=90;if(lives<=0)endGame('SHIP');}
+    else if(c.y>=BED-1){c.dead=true;boom(c.x,BED-1,6,P.bed);beep(120,.1,'triangle');}}
+}
 function update(){
- if(state!=='play'||paused){for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.l--;}parts=parts.filter(p=>p.l>0);return;}
- if(keys.ArrowLeft||keys.KeyA)sub.x-=1.2;if(keys.ArrowRight||keys.KeyD)sub.x+=1.2;
- sub.x=Math.max(0,Math.min(W-12,sub.x));
- if(cool>0)cool--;
- if(keys.Space&&cool===0&&torps.length<3){torps.push({x:sub.x+4,y:sub.y-2});cool=15;beep(880,.08);}
- if(inv>0)inv--;
- if(--spawn<=0){const l=Math.random()<.5;ships.push({x:l?-16:W,y:SURF-5,v:(l?1:-1)*(.3+Math.random()*.3+level*.08)});spawn=Math.max(40,120-level*10)+Math.random()*60;}
- for(const s of ships){s.x+=s.v;if(s.x>4&&s.x<W-20&&Math.random()<.006+level*.002){charges.push({x:s.x+7,y:SURF+1,v:.35+level*.05+Math.random()*.2});beep(200,.1,'triangle');}}
- ships=ships.filter(s=>s.x>-20&&s.x<W+20);
- for(const c of charges)c.y+=c.v;
- for(const t of torps)t.y-=2;
- for(const t of torps){const tb={x:t.x,y:t.y,w:2,h:4};
-  for(const c of charges)if(!c.dead&&!t.dead&&hit(tb,{x:c.x-1,y:c.y-1,w:4,h:4})){c.dead=t.dead=true;score+=10;boom(c.x,c.y,8,P.boom);beep(300,.15,'sawtooth');}
-  for(const s of ships)if(!s.dead&&!t.dead&&hit(tb,{x:s.x,y:s.y,w:16,h:6})){s.dead=t.dead=true;score+=100;sunk++;boom(s.x+8,s.y+3,30,P.boom);boom(s.x+8,s.y+3,15,P.red);beep(90,.4,'sawtooth',.08);if(sunk%8===0){level++;beep(523,.1);setTimeout(()=>beep(784,.15),100);}}
- }
- for(const c of charges){if(c.dead)continue;
-  if(inv===0&&hit({x:c.x-1,y:c.y-1,w:4,h:4},{x:sub.x,y:sub.y,w:12,h:5})){c.dead=true;lives--;boom(sub.x+6,sub.y+2,40,P.sub);beep(60,.6,'sawtooth',.1);inv=90;if(lives<=0){state='over';if(score>hi){hi=score;saveHi();}}}
-  else if(c.y>=BED-1){c.dead=true;boom(c.x,BED-1,6,P.bed);beep(120,.1,'triangle');}}
- charges=charges.filter(c=>!c.dead);torps=torps.filter(t=>!t.dead&&t.y>SURF);ships=ships.filter(s=>!s.dead);
- for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.l--;}parts=parts.filter(p=>p.l>0);
+  if(state!=='play'||paused){stepParts();return;}
+  updateSub();
+  if(mode===1)updateAiShips();else updateBoat();
+  for(const c of charges)c.y+=c.v;
+  for(const t of torps)t.y-=2;
+  torpedoHits();
+  if(state==='play')chargeHits();
+  charges=charges.filter(c=>!c.dead);torps=torps.filter(t=>!t.dead&&t.y>SURF);ships=ships.filter(s=>!s.dead);
+  stepParts();
 }
 
 function txt(s,x,y,c=P.txt,a='left'){ctx.fillStyle=c;ctx.font='8px monospace';ctx.textAlign=a;ctx.fillText(s,x,y);}
-function panel(y,h){ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(16,y,128,h);}
+function panel(y,h){ctx.fillStyle='rgba(0,0,0,.65)';ctx.fillRect(16,y,128,h);}
+const touch=()=>matchMedia('(pointer:coarse)').matches;
 let tick=0;
+function drawHud(){
+  if(mode===1){txt('SCORE '+score,2,8);txt('LV '+level,W/2,8,P.txt,'center');txt('SUBS '+lives,W-2,8,P.txt,'right');txt('HI '+hi,W/2,17,P.boom,'center');}
+  else{txt('SUB '+lives,2,8,P.sub);txt('2P',W/2,8,P.txt,'center');txt('SHIP '+boatLives,W-2,8,P.boat,'right');}
+}
+function drawOverlay(blinkOn){
+  if(state==='title'){panel(38,56);txt('DEPTH RUNNER',W/2,51,P.sub,'center');
+    txt((mode===1?'> ':'  ')+'1 PLAYER ',W/2,64,mode===1?P.txt:'#7869C4','center');
+    txt((mode===2?'> ':'  ')+'2 PLAYERS',W/2,74,mode===2?P.txt:'#7869C4','center');
+    if(blinkOn)txt(touch()?'TAP TO DIVE':'PRESS ENTER',W/2,88,P.boom,'center');}
+  if(state==='over'){panel(45,32);
+    if(mode===1)txt('GAME OVER',W/2,58,P.red,'center');else txt(winner+' WINS!',W/2,58,winner==='SUB'?P.sub:P.boat,'center');
+    if(blinkOn)txt(touch()?'TAP TO RETRY':'PRESS ENTER',W/2,70,P.txt,'center');}
+  if(paused&&state==='play'){panel(50,20);txt('PAUSED',W/2,63,P.txt,'center');}
+}
 function draw(){
- ctx.fillStyle=P.sky;ctx.fillRect(0,0,W,SURF);
- const g=ctx.createLinearGradient(0,SURF,0,BED);g.addColorStop(0,P.sea);g.addColorStop(1,P.deep);ctx.fillStyle=g;ctx.fillRect(0,SURF,W,BED-SURF);
- ctx.fillStyle='#7869C4';for(let x=0;x<W;x+=4)ctx.fillRect(x+((tick/12|0)%4),SURF,2,1);
- ctx.fillStyle=P.bed;ctx.fillRect(0,BED,W,H-BED);
- for(const s of ships)spr(SHIP,s.x,s.y,P.ship,P.shipd);
- ctx.fillStyle=P.chg;for(const c of charges){ctx.fillRect(c.x-1,c.y,3,2);ctx.fillRect(c.x,c.y-1,1,4);}
- ctx.fillStyle=P.tor;for(const t of torps)ctx.fillRect(t.x,t.y,2,4);
- if(state!=='over'&&(inv===0||(inv>>2)%2||state==='title'))spr(SUB,sub.x,sub.y,P.sub,P.subd);
- for(const p of parts){ctx.fillStyle=p.c;ctx.fillRect(p.x|0,p.y|0,1,1);}
- txt('SCORE '+score,2,8);txt('LV '+level,W/2,8,P.txt,'center');txt('SUBS '+lives,W-2,8,P.txt,'right');
- txt('HI '+hi,W/2,17,P.boom,'center');
- const blinkOn=(tick>>5)%2===0;
- if(state==='title'){panel(40,40);txt('DEPTH RUNNER',W/2,54,P.sub,'center');if(blinkOn)txt(matchMedia('(pointer:coarse)').matches?'TAP TO DIVE':'PRESS ENTER',W/2,70,P.txt,'center');}
- if(state==='over'){panel(45,30);txt('GAME OVER',W/2,58,P.red,'center');if(blinkOn)txt(matchMedia('(pointer:coarse)').matches?'TAP TO RETRY':'PRESS ENTER',W/2,69,P.txt,'center');}
- if(paused&&state==='play'){panel(50,20);txt('PAUSED',W/2,63,P.txt,'center');}
+  ctx.fillStyle=P.sky;ctx.fillRect(0,0,W,SURF);
+  const g=ctx.createLinearGradient(0,SURF,0,BED);g.addColorStop(0,P.sea);g.addColorStop(1,P.deep);ctx.fillStyle=g;ctx.fillRect(0,SURF,W,BED-SURF);
+  ctx.fillStyle='#7869C4';for(let x=0;x<W;x+=4)ctx.fillRect(x+((tick/12|0)%4),SURF,2,1);
+  ctx.fillStyle=P.bed;ctx.fillRect(0,BED,W,H-BED);
+  for(const s of ships)spr(SHIP,s.x,s.y,P.ship,P.shipd);
+  if(mode===2&&state!=='title'&&boat.down===0&&!(state==='over'&&winner==='SUB')&&(boat.inv===0||(boat.inv>>2)%2))spr(BOAT,boat.x,boat.y,P.boat,P.boatd);
+  ctx.fillStyle=P.chg;for(const c of charges){ctx.fillRect(c.x-1,c.y,3,2);ctx.fillRect(c.x,c.y-1,1,4);}
+  ctx.fillStyle=P.tor;for(const t of torps)ctx.fillRect(t.x,t.y,2,4);
+  if(!(state==='over'&&lives<=0)&&(inv===0||(inv>>2)%2||state==='title'))spr(SUB,sub.x,sub.y,P.sub,P.subd);
+  for(const p of parts){ctx.fillStyle=p.c;ctx.fillRect(p.x|0,p.y|0,1,1);}
+  drawHud();
+  drawOverlay((tick>>5)%2===0);
 }
 
 // fixed 60Hz step so high-refresh screens don't run the game double speed
