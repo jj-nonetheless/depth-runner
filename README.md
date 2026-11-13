@@ -1,72 +1,83 @@
 # Depth Runner
 
-A small Commodore 64–style arcade game. You steer a submarine along the seabed while ships
-pass overhead and drop depth charges. Fire torpedoes upward to destroy the charges or sink the ships.
+A small Commodore 64–style arcade game. You steer a submarine along the seabed while ships pass overhead and
+drop depth charges. Fire torpedoes upward to destroy the charges or sink the ships. Play alone, against a
+friend online, or against the computer.
 
-## Play
+Built with [SolidJS](https://www.solidjs.com/) and [Vite](https://vite.dev/). The build is a single
+self-contained `index.html`.
 
-Open `index.html` in any modern browser. No install or build step.
+## Run it
+
+```sh
+npm install
+npm run dev        # local dev server with hot reload
+npm run build      # dist/index.html (open it straight from disk) and dist/artifact.html (for claude.ai)
+npm test           # browser tests against the build (needs Playwright installed)
+```
 
 ## Modes
 
-- **1 player**: the sub against computer-run ships.
-- **2 players**: pick a side, sub or ship. The game looks for someone else with the page open who picked the
-  other side and connects you. If nobody turns up within 15 seconds (or you press C), the computer plays the
-  other side. If your opponent leaves mid-game, the computer takes over their side.
+- **1 player**: the sub against computer-run ships. Score points, level up, chase the high score.
+- **2 players online**: open the lobby to see who else has the game open. Challenge someone or accept a
+  challenge, then each of you picks a side (sub or ship) and presses Ready. If your opponent leaves
+  mid-game, the computer takes over their side.
+- **2 players vs computer**: pick a side; the computer plays the other.
 
-Online play uses the claude.ai artifact `room` capability, so it only works when the page is opened on claude.ai
-by people who are signed in and have access to it. Anywhere else (a public link, or `index.html` opened
-straight from disk) 2 players goes straight to playing the computer.
-
-How the online game works: the sub player's browser runs the game and shares a snapshot of it about 30 times a
-second; the ship player's browser sends its key presses and draws the snapshots it receives.
+Online play uses the claude.ai artifact `room` capability, so it only works when the page is opened on
+claude.ai by people who are signed in and have access to it. Anywhere else the lobby says it's offline and
+explains why, and the computer is still available.
 
 ## Controls
 
 - **← / →** (or A / D): steer
 - **Space**: the sub fires a torpedo (also ↑); the ship drops a depth charge (also S)
-- **1 / 2**: 1 player, or choose a side for 2 players
-- **Enter**: start, or play again / rematch
-- **C**: while waiting for player 2, play the computer now
-- **P**: pause (not in online games) — **Esc**: back to the title
-- On touch screens, on-screen ← → and FIRE/DROP buttons appear.
+- **1 / 2 / 3** on the title screen: 1 player, online lobby, vs computer
+- **Enter**: play again after a game
+- **P**: pause (not in online games) · **Esc**: leave
+- On touch screens, on-screen ← → and FIRE/DROP buttons appear during a game.
 
 ## Power-ups
 
 Colour shows the kind (cyan = defence, orange = weapon, yellow = speed); the letter says which.
-They turn up every 9–18 seconds at first, closer together as a game goes on.
-Losing a life loses any timed power-up.
+They turn up every 9–18 seconds at first, closer together as a game goes on. Losing a life loses any timed
+power-up.
 
-**Sub** — capsules sink from the surface and rest on the seabed for a few seconds; drive into one to collect it.
+**Sub**: capsules sink from the surface and rest on the seabed for a few seconds; drive into one.
 
 - **S** Shield: blocks one depth charge hit
 - **T** Twin torpedoes: fires two at once, up to 6 on screen, for 10 seconds
 - **R** Rapid fire: much shorter reload, for 10 seconds
 - **+** Extra sub: rare, 1 player only, from level 2
 
-**Ship (2 players)** — buoys bob on the surface for a few seconds; drive over one to collect it.
+**Ship (2 players)**: buoys bob on the surface for a few seconds; drive over one.
 
 - **A** Armor: blocks one torpedo hit
 - **C** Cluster: drops 3 charges side by side, for 10 seconds
 - **R** Fast reload: for 10 seconds
 
-## Scoring (1 player)
+## Scoring and winning
 
-- Depth charge: 10 points
-- Ship: 100 points
-- Level goes up every 8 ships sunk; ships get faster and drop charges more often
-- 3 lives. The high score is saved in the browser.
+- 1 player: depth charge 10 points, ship 100 points, level up every 8 ships, 3 lives.
+- 2 players: 3 lives each. The sub wins by torpedoing the ship 3 times; the ship wins by hitting the sub 3 times.
 
-## Winning (2 players)
+## How the code is laid out
 
-Each side has 3 lives. The sub wins by torpedoing the ship 3 times; the ship wins by hitting the sub 3 times.
-A sunk ship comes back from one edge of the screen after a short pause.
-## Test
+```
+src/
+  game/        constants, engine (rules + state), ai, render (canvas), snapshot (online sync), input, sound
+  net/room.js  the online lobby: presence, challenges, matching
+  controller.js  screen flow and the 60 Hz loop; decides who runs the game online
+  components/  Solid screens over the canvas (title, lobby, sides, results), touch pads, rules
+tests/         solo.mjs (one page), online.mjs (tabs sharing tests/mockroom.js, a stand-in for the room)
+```
 
-Headless browser tests (need Playwright):
+Online, everything travels in **presence**, the part of the room every viewer may send. Each page shares its
+name, where it is (title, lobby, in a match), who it's challenging, its side and whether it's ready. Two
+pages that challenge each other are a match. During a game the sub player's page runs the game and shares a
+snapshot about 30 times a second; the ship player's page sends its keys and draws the snapshots.
 
-    node tests/smoke.js "$PWD/index.html"
+## Publishing to claude.ai
 
-    # online play: serve the folder, then two tabs share a stand-in for the room capability
-    python3 -m http.server 8765 &
-    node tests/net-smoke.js http://127.0.0.1:8765/index.html tests/mockroom.js
+`npm run build` writes `dist/artifact.html`, the page in the form the Artifact tool publishes. Publish it with
+the `room` capability declared (`capabilities: {room: {}}`).
