@@ -55,12 +55,12 @@ export default function App() {
     <div class="wrap">
       <header>
         <h1>DEPTH RUNNER</h1>
-        <p class="load">LOAD "DEPTH RUNNER",1 &nbsp;<b>READY.</b> <span class="cursor" /></p>
+        <p class="tag"><span class="badge">16-BIT EDITION</span><span class="blink">PUSH START</span></p>
       </header>
 
       <div class="frame">
         <div class="screen">
-          <canvas ref={canvas} width="160" height="120" aria-label="Depth Runner game screen" />
+          <canvas ref={canvas} width="320" height="240" aria-label="Depth Runner game screen" />
           <Screens />
           <Show when={notice() && screen() !== 'play'}>
             <p class="notice" role="status">{notice()}</p>

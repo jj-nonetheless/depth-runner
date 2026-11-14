@@ -1,11 +1,16 @@
 # Depth Runner
 
-A small Commodore 64–style arcade game. You steer a submarine along the seabed while ships pass overhead and
+A 16-bit style arcade game. You steer a submarine along the seabed while ships pass overhead and
 drop depth charges. Fire torpedoes upward to destroy the charges or sink the ships. Play alone, against a
 friend online, or against the computer.
 
 Built with [SolidJS](https://www.solidjs.com/) and [Vite](https://vite.dev/). The build is a single
 self-contained `index.html`.
+
+The game runs on a 160x120 grid and is drawn at 320x240: shaded sprites with outlines, a sunset sky,
+parallax layers (clouds, islands, light rays, three rock and kelp layers, fish, bubbles and drifting specks)
+that move with the current and the sub, animated propellers, wakes and funnel smoke, tumbling depth charges,
+layered explosions, splashes, shockwaves, ships that tilt and sink, and screen shake.
 
 ## Run it
 
@@ -65,7 +70,8 @@ power-up.
 
 ```
 src/
-  game/        constants, engine (rules + state), ai, render (canvas), snapshot (online sync), input, sound
+  game/        constants, engine (rules + state), ai, snapshot (online sync), input, sound
+               art (sprites), scene (parallax background), vfx (visual-only effects), render (draws it all)
   net/room.js  the online lobby: presence, challenges, matching
   controller.js  screen flow and the 60 Hz loop; decides who runs the game online
   components/  Solid screens over the canvas (title, lobby, sides, results), touch pads, rules

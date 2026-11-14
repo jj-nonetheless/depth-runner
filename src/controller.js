@@ -10,7 +10,7 @@ import { aiShip, aiSub, resetAi } from './game/ai.js';
 import { encode, apply } from './game/snapshot.js';
 import { controls, idle } from './game/input.js';
 import { P } from './game/constants.js';
-import { draw } from './game/render.js';
+import { draw, animate } from './game/render.js';
 import { startJingle } from './game/sound.js';
 import { board, recordLocal, placeOn } from './net/scores.js';
 import {
@@ -149,6 +149,7 @@ function takeover() {
 }
 function tick() {
   n++;
+  animate();
   if (S.phase !== 'play' && S.phase !== 'over') return;
   if (S.mode === 2 && S.opp === 'remote') {
     const o = opponentPresence();

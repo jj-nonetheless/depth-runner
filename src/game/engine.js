@@ -2,6 +2,7 @@
 // `S.phase` and the canvas renderer reads the rest.
 import { W, SURF, BED, P, PU, SHIP_TABLE, CAP } from './constants.js';
 import { beep, jingle, levelJingle, winJingle } from './sound.js';
+import { vfx, shake, flash, clearVfx } from './vfx.js';
 
 export const S = {
   mode: 1, // 1 = sub vs computer ships; 2 = sub vs destroyer
@@ -25,6 +26,7 @@ function saveHi() {
 }
 
 export function newGame({ mode, myRole = 'sub', opp = 'cpu' }) {
+  clearVfx();
   Object.assign(S, {
     mode, myRole, opp, phase: 'play', paused: false, winner: '', gid: Date.now() % 1e9,
     sub: { x: 74, y: BED - 6, shield: false, twin: 0, rapid: 0 },
@@ -44,19 +46,28 @@ export function boom(x, y, n, c) {
   }
 }
 export const FX = {
-  fire: () => beep(880, 0.08),
-  twin: () => beep(990, 0.08),
-  drop: () => beep(200, 0.1, 'triangle'),
-  chg: (x, y) => { boom(x, y, 8, P.boom); beep(300, 0.15, 'sawtooth'); },
-  sink: (x, y) => { boom(x, y, 30, P.boom); boom(x, y, 15, P.red); beep(90, 0.4, 'sawtooth', 0.08); },
-  bsink: (x, y) => { boom(x, y, 30, P.boom); boom(x, y, 15, P.boat); beep(90, 0.4, 'sawtooth', 0.08); },
-  guard: (x, y) => { boom(x, y, 14, P.def); beep(500, 0.15, 'triangle'); },
-  subhit: (x, y) => { boom(x, y, 40, P.sub); beep(60, 0.6, 'sawtooth', 0.1); },
-  bed: (x, y) => { boom(x, y, 6, P.bed); beep(120, 0.1, 'triangle'); },
-  pu: () => jingle(),
-  lvl: () => levelJingle(),
+  fire: (x, y) => { beep(880, 0.08); vfx('muzzle', x, y); },
+  twin: (x, y) => { beep(990, 0.08); vfx('muzzle', x - 3, y); vfx('muzzle', x + 5, y); },
+  drop: (x, y) => { beep(200, 0.1, 'triangle'); vfx('splash', x, SURF, { small: true }); },
+  chg: (x, y) => { boom(x, y, 8, P.boom); beep(300, 0.15, 'sawtooth'); vfx('boom', x, y, { size: 1 }); vfx('ring', x, y, { r: 10 }); shake(1.5); },
+  sink: (x, y) => { boom(x, y, 30, P.boom); boom(x, y, 15, P.red); beep(90, 0.4, 'sawtooth', 0.08); bigBlast(x, y, 'ship'); },
+  bsink: (x, y) => { boom(x, y, 30, P.boom); boom(x, y, 15, P.boat); beep(90, 0.4, 'sawtooth', 0.08); bigBlast(x, y, 'boat'); },
+  guard: (x, y) => { boom(x, y, 14, P.def); beep(500, 0.15, 'triangle'); vfx('guard', x, y); vfx('ring', x, y, { r: 14, color: 'def' }); },
+  subhit: (x, y) => { boom(x, y, 40, P.sub); beep(60, 0.6, 'sawtooth', 0.1); vfx('boom', x, y, { size: 3 }); vfx('ring', x, y, { r: 26 }); shake(7); flash('#fff4d0', 10); },
+  bed: (x, y) => { boom(x, y, 6, P.bed); beep(120, 0.1, 'triangle'); vfx('sand', x, y); vfx('boom', x, y - 1, { size: 1 }); },
+  pu: (x, y) => { jingle(); vfx('sparkle', x, y); },
+  lvl: () => { levelJingle(); flash('#c8e0ff', 6); },
   win: () => winJingle(),
 };
+function bigBlast(x, y, sprite) {
+  vfx('boom', x, y, { size: 3 });
+  vfx('boom', x - 5, y + 2, { size: 2, delay: 6 });
+  vfx('boom', x + 6, y - 1, { size: 2, delay: 11 });
+  vfx('splash', x, SURF);
+  vfx('wreck', x, y, { sprite });
+  shake(5);
+  flash('#ffe8a0', 6);
+}
 export function fx(type, x = 0, y = 0) {
   FX[type](x, y);
   if (S.record) {
@@ -99,21 +110,21 @@ export function spawnItem(owner, kind, x) {
   if (owner === 'sub') S.items.push({ owner, kind, x: x ?? 4 + Math.random() * (W - 8 - CAP), y: SURF + 2, v: 0.4, life: 300 });
   else S.items.push({ owner, kind, x: x ?? 8 + Math.random() * (W - 16 - CAP), y: SURF - 8, v: 0, life: 360 });
 }
-export function applySub(k) {
+export function applySub(k, x = S.sub.x + 6, y = S.sub.y) {
   const p = PU[k];
   if (k === 'shield') S.sub.shield = true;
   else if (k === 'life') S.lives++;
   else S.sub[k] = p.dur;
   setMsg(p.name, p.c, 90, k, 'sub');
-  fx('pu');
+  fx('pu', x, y);
 }
-export function applyShip(k) {
+export function applyShip(k, x = S.boat.x + 8, y = S.boat.y) {
   const p = PU[k];
   if (k === 'armor') S.boat.armor = true;
   else if (k === 'cluster') S.boat.cluster = p.dur;
   else S.boat.rapid = p.dur;
   setMsg('SHIP ' + p.name, p.c, 90, k, 'ship');
-  fx('pu');
+  fx('pu', x, y);
 }
 function updateItems() {
   S.elapsed++;
@@ -124,10 +135,10 @@ function updateItems() {
     const box = { x: it.x, y: it.y, w: CAP, h: CAP };
     if (it.owner === 'sub') {
       if (it.y < BED - CAP) it.y = Math.min(BED - CAP, it.y + it.v); else it.life--;
-      if (hit(subBox, box)) { it.dead = true; applySub(it.kind); }
+      if (hit(subBox, box)) { it.dead = true; applySub(it.kind, it.x + CAP / 2, it.y + CAP / 2); }
     } else {
       it.life--;
-      if (S.boat.down === 0 && hit({ x: S.boat.x, y: S.boat.y, w: 16, h: 6 }, box)) { it.dead = true; applyShip(it.kind); }
+      if (S.boat.down === 0 && hit({ x: S.boat.x, y: S.boat.y, w: 16, h: 6 }, box)) { it.dead = true; applyShip(it.kind, it.x + CAP / 2, it.y + CAP / 2); }
     }
     if (it.life <= 0) it.dead = true;
   }
@@ -151,7 +162,7 @@ function updateSub(c) {
     if (twin) S.torps.push({ x: sub.x + 1, y: sub.y - 1 }, { x: sub.x + 9, y: sub.y - 1 });
     else S.torps.push({ x: sub.x + 4, y: sub.y - 2 });
     S.cool = sub.rapid > 0 ? 6 : 15;
-    fx(twin ? 'twin' : 'fire');
+    fx(twin ? 'twin' : 'fire', sub.x + 5, sub.y - 1);
   }
   if (S.inv > 0) S.inv--;
 }
@@ -165,7 +176,7 @@ function updateAiShips() {
     s.x += s.v;
     if (s.x > 4 && s.x < W - 20 && Math.random() < 0.006 + S.level * 0.002) {
       S.charges.push({ x: s.x + 7, y: SURF + 1, v: 0.35 + S.level * 0.05 + Math.random() * 0.2 });
-      fx('drop');
+      fx('drop', s.x + 7, SURF);
     }
   }
   S.ships = S.ships.filter((s) => s.x > -20 && s.x < W + 20);
@@ -188,7 +199,7 @@ function updateBoat(c) {
   if (c.a && boat.cool === 0 && S.charges.length < (cluster ? 8 : 5)) {
     for (const x of cluster ? [boat.x + 1, boat.x + 7, boat.x + 13] : [boat.x + 7]) S.charges.push({ x, y: SURF + 1, v: 0.65 });
     boat.cool = boat.rapid > 0 ? 18 : 40;
-    fx('drop');
+    fx('drop', boat.x + 7, SURF);
   }
 }
 

@@ -1,40 +1,53 @@
-/* Layout: one C64 "screen" — light-blue border frame around the game canvas, menus laid over it,
-   READY-prompt style text below. Deliberately single-theme (dark). */
+/* Layout: a 16-bit console screen — the game in a dark bezel with a CRT glow, menus as bevelled
+   blue windows laid over the moving scene, rules and the Top 10 below. Deliberately single-theme (dark). */
 :root {
-  --border: #6C5EB5; --screen: #352879; --ink: #A59FF0; --bright: #FFFFFF; --amber: #C3B15F;
-  --sub: #B8C76F; --boat: #E08070; --void: #14102E; --red: #C98A7E; --dim: #7869C4;
+  --border: #3a5ad8; --screen: #142a6a; --ink: #b8c8f0; --bright: #FFFFFF; --amber: #ffcf5a;
+  --sub: #c8e070; --boat: #ff9a84; --void: #070b1f; --red: #ff8a7a; --dim: #7a8ac8;
+  --win-hi: #4a70f0; --win-lo: #1a2890; --win-edge: #e8ecff; --win-shadow: #0a0f30;
   --pu-def: #6CD2E6; --pu-off: #F0A040; --pu-spd: #F0E060;
   --display: "Press Start 2P", ui-monospace, monospace;
-  --body: "VT323", ui-monospace, "Courier New", monospace;
+  --body: "Pixelify Sans", ui-rounded, system-ui, sans-serif;
   color-scheme: dark;
 }
 html, body { background: var(--void); color: var(--ink); }
 body {
   margin: 0;
-  font-family: var(--body); font-size: 22px; line-height: 1.25;
+  background: radial-gradient(ellipse at 50% 0%, #1a2a6a 0%, var(--void) 60%) no-repeat, var(--void);
+  font-family: var(--body); font-size: 18px; line-height: 1.35;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 24px 40px;
 }
-.wrap { max-width: 840px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
-h1 { font-family: var(--display); font-size: clamp(18px, 4.2vw, 30px); color: var(--bright); margin: 0; letter-spacing: .04em; text-shadow: 3px 3px 0 var(--border); text-wrap: balance; }
-.load { margin: 0; font-size: 20px; }
-.load b { color: var(--amber); font-weight: normal; }
-.cursor { display: inline-block; width: .55em; height: 1em; background: var(--ink); vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+.wrap { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
+h1 {
+  font-family: var(--display); font-size: clamp(20px, 4.6vw, 34px); margin: 0; letter-spacing: .04em; text-wrap: balance;
+  background: linear-gradient(#fff6c8 0%, #ffd060 45%, #ff8a3a 55%, #e8503a 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(2px 0 0 #2a0f3a) drop-shadow(-2px 0 0 #2a0f3a) drop-shadow(0 2px 0 #2a0f3a) drop-shadow(0 -2px 0 #2a0f3a) drop-shadow(0 4px 0 #0a0f30);
+}
+.tag { margin: 0; display: flex; gap: 12px; align-items: center; font-family: var(--display); font-size: 10px; }
+.badge { color: var(--bright); background: linear-gradient(#e84a8a, #8a2a9a); padding: 6px 8px; border-radius: 3px; box-shadow: 0 2px 0 #000; }
+.blink { color: var(--amber); animation: blink 1.1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 
-.frame { background: var(--border); padding: clamp(10px, 2.4vw, 24px); box-shadow: 0 0 0 2px #000, 0 18px 60px rgba(108, 94, 181, .25); }
-.screen { position: relative; width: 100%; aspect-ratio: 4 / 3; max-width: 100%; background: var(--screen); overflow: hidden; }
+.frame {
+  background: linear-gradient(#30343f, #15171e); border-radius: 18px; padding: clamp(10px, 2.4vw, 22px);
+  box-shadow: inset 0 2px 0 #4c5262, inset 0 -3px 0 #0b0d12, 0 0 0 2px #000, 0 22px 60px rgba(40, 80, 220, .28);
+}
+.screen { position: relative; width: 100%; aspect-ratio: 4 / 3; max-width: 100%; background: #081736; overflow: hidden; border-radius: 6px; box-shadow: 0 0 0 2px #000; }
 canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; touch-action: none; }
-.screen::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, .12) 0 1px, transparent 1px 3px); }
+.screen::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3;
+  background: radial-gradient(ellipse at center, transparent 62%, rgba(0, 0, 0, .38) 100%),
+    repeating-linear-gradient(to bottom, rgba(0, 0, 0, .08) 0 1px, transparent 1px 3px);
+}
 
 /* menus over the canvas */
 .panel {
   position: absolute; inset: 0; z-index: 1; overflow-y: auto;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(8px, 2vw, 16px);
   padding: clamp(10px, 3vw, 28px); box-sizing: border-box;
-  background: rgba(20, 16, 46, .82); text-align: center;
+  background: rgba(7, 11, 31, .52); text-align: center;
   font-family: var(--display); font-size: clamp(8px, 1.6vw, 12px); line-height: 1.6; color: var(--bright);
 }
 .panel h2 { margin: 0; font-size: clamp(11px, 2.6vw, 20px); color: var(--bright); letter-spacing: .06em; }
@@ -168,3 +181,38 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--amber); out
 }
 .scores li { text-align: left; }
 .scores .when { line-height: 1; }
+
+/* ---------- 16-bit windows: bevelled blue gradient boxes with a light edge */
+.panel h2 { text-shadow: 2px 2px 0 #000; }
+.panel .logo {
+  font-size: clamp(16px, 4.4vw, 32px); text-shadow: none;
+  background: linear-gradient(#fff6c8 0%, #ffd060 45%, #ff8a3a 55%, #e8503a 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(2px 0 0 #2a0f3a) drop-shadow(-2px 0 0 #2a0f3a) drop-shadow(0 2px 0 #2a0f3a) drop-shadow(0 -2px 0 #2a0f3a) drop-shadow(0 4px 0 #0a0f30);
+}
+.panel button, .tabs button, .pad {
+  background: linear-gradient(var(--win-hi), var(--win-lo)); color: var(--bright);
+  border: 2px solid var(--win-edge); border-radius: 4px;
+  box-shadow: inset 0 0 0 2px var(--win-shadow), 0 3px 0 rgba(0, 0, 0, .55); text-shadow: 1px 1px 0 #000;
+}
+.panel button:hover:not(:disabled), .tabs button:hover { background: linear-gradient(#5a84ff, #2438b0); }
+.panel button.go, .pad.fire { background: linear-gradient(#ffe890, #f0a030); color: #2a1600; text-shadow: none; border-color: #fff6d0; }
+.panel button.go:hover:not(:disabled) { background: linear-gradient(#fff0b0, #ffb848); }
+.panel button[aria-pressed="true"].go { background: linear-gradient(#e0f490, #8ab040); }
+.panel kbd { color: #2a1600; background: var(--amber); border-radius: 2px; }
+.tabs button { color: var(--ink); background: linear-gradient(#24318a, #121a5a); }
+.tabs button[aria-selected="true"] { color: var(--bright); background: linear-gradient(var(--win-hi), var(--win-lo)); }
+.nick input { background: #0a1240; border: 2px solid var(--win-edge); border-radius: 4px; box-shadow: inset 0 0 0 2px var(--win-shadow); }
+.players li { background: linear-gradient(rgba(74, 112, 240, .5), rgba(26, 40, 144, .55)); border: 2px solid rgba(232, 236, 255, .55); border-radius: 4px; }
+.invite { border: 2px solid var(--amber); border-radius: 4px; background: linear-gradient(rgba(120, 80, 10, .5), rgba(60, 30, 0, .5)); }
+.invite.waiting { border-color: var(--dim); background: rgba(26, 40, 144, .45); }
+.panel .side.sub[aria-pressed="true"] { border-color: #f2ffc0; background: linear-gradient(#7ea040, #3a5a18); }
+.panel .side.ship[aria-pressed="true"] { border-color: #ffe0d8; background: linear-gradient(#e0705a, #8a2a22); }
+.side.sub .name { color: #e8f8a0; } .side.ship .name { color: #ffd0c4; }
+.notice { background: linear-gradient(#ffe890, #f0a030); color: #2a1600; border-radius: 3px; box-shadow: 0 3px 0 rgba(0, 0, 0, .5); }
+.scores li { background: linear-gradient(90deg, rgba(74, 112, 240, .38), rgba(26, 40, 144, .3)); border-radius: 3px; }
+.scores li:nth-child(even) { background: linear-gradient(90deg, rgba(74, 112, 240, .22), rgba(26, 40, 144, .16)); }
+.top10 h2, .info h2 { color: var(--amber); text-shadow: 2px 2px 0 #000; }
+.info kbd { color: #2a1600; background: var(--amber); border-radius: 2px; }
+.pads.ship .pad { border-color: #ffe0d8; background: linear-gradient(#e0705a, #8a2a22); }
+.pads.ship .pad.fire { background: linear-gradient(#ffb8a0, #e0604a); }
+@media (prefers-reduced-motion: reduce) { .blink { animation: none; } }
