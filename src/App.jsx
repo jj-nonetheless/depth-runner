@@ -48,7 +48,11 @@ export default function App() {
   window.addEventListener('keydown', onKey);
   window.addEventListener('keyup', onKeyUp);
   window.addEventListener('blur', releaseAll);
+  // switching apps or tabs never delivers the key-up, so let go of everything
+  const onHidden = () => { if (document.visibilityState !== 'visible') releaseAll(); };
+  document.addEventListener('visibilitychange', onHidden);
   onCleanup(() => {
+    document.removeEventListener('visibilitychange', onHidden);
     window.removeEventListener('keydown', onKey);
     window.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('blur', releaseAll);
@@ -69,7 +73,7 @@ export default function App() {
         </div>
       </header>
 
-      <div class="frame">
+      <div class="frame" onContextMenu={(e) => e.preventDefault()}>
         <div class="screen">
           <canvas ref={canvas} width="320" height="240" aria-label="Depth Runner game screen" />
           <Screens />

@@ -3,6 +3,7 @@
 import { W, SURF, BED, P, PU, SHIP_TABLE, CAP } from './constants.js';
 import { beep, jingle, levelJingle, winJingle } from './sound.js';
 import { vfx, shake, flash, clearVfx } from './vfx.js';
+import { releaseAll } from './input.js';
 
 export const S = {
   mode: 1, // 1 = sub vs computer ships; 2 = sub vs destroyer
@@ -27,6 +28,7 @@ function saveHi() {
 
 export function newGame({ mode, myRole = 'sub', opp = 'cpu' }) {
   clearVfx();
+  releaseAll(); // nothing held over from the last game or the menus
   Object.assign(S, {
     mode, myRole, opp, phase: 'play', paused: false, winner: '', gid: Date.now() % 1e9,
     sub: { x: 74, y: BED - 6, shield: false, twin: 0, rapid: 0 },

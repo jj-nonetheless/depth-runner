@@ -1,13 +1,38 @@
 // On-screen buttons for touch screens (hidden on devices with a mouse).
+// Each button follows the finger that pressed it: the button stays held if the thumb drifts off it, and
+// lets go when that finger lifts anywhere, the touch is cancelled, or the buttons go away mid-press
+// (game over), so a key can never stay stuck down.
+import { onCleanup } from 'solid-js';
 import { press } from '../game/input.js';
 import { S } from '../game/engine.js';
 
+const noMenu = (e) => e.preventDefault();
+
 function Pad(props) {
-  const down = (e) => { e.preventDefault(); press(props.code, true); e.currentTarget.classList.add('on'); };
-  const up = (e) => { press(props.code, false); e.currentTarget.classList.remove('on'); };
+  let el;
+  let finger = null;
+  const release = (e) => {
+    if (finger === null || (e && e.pointerId !== finger)) return;
+    finger = null;
+    press(props.code, false);
+    el?.classList.remove('on');
+    window.removeEventListener('pointerup', release);
+    window.removeEventListener('pointercancel', release);
+  };
+  const down = (e) => {
+    e.preventDefault();
+    if (finger !== null) return;
+    finger = e.pointerId;
+    try { el.setPointerCapture(e.pointerId); } catch { /* not supported: the window listeners cover it */ }
+    press(props.code, true);
+    el.classList.add('on');
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+  };
+  onCleanup(() => { if (finger !== null) release({ pointerId: finger }); });
   return (
-    <button class={'pad ' + (props.class || '')} aria-label={props.label}
-      onPointerDown={down} onPointerUp={up} onPointerCancel={up} onPointerLeave={up}>
+    <button ref={el} class={'pad ' + (props.class || '')} aria-label={props.label}
+      onPointerDown={down} onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release} onContextMenu={noMenu}>
       {props.children}
     </button>
   );
@@ -16,7 +41,7 @@ function Pad(props) {
 export default function Pads() {
   const ship = S.mode === 2 && S.myRole === 'ship';
   return (
-    <div class={'pads' + (ship ? ' ship' : '')} aria-label="Touch controls">
+    <div class={'pads' + (ship ? ' ship' : '')} aria-label="Touch controls" onContextMenu={noMenu}>
       <div class="grp">
         <Pad code="ArrowLeft" label="Move left">&larr;</Pad>
         <Pad code="ArrowRight" label="Move right">&rarr;</Pad>
