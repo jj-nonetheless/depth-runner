@@ -35,6 +35,14 @@ ok('the pre-render is rich (many colours on screen)', (await colours(A)) > 60);
 await A.keyboard.press('Enter');
 await until(A, (d) => d.screen() === 'title', null, 5000);
 ok('press start goes to the title menu', await A.isVisible('text=2 PLAYERS ONLINE'));
+// regression: the start screen's loop must stop once it has gone, or it keeps sending you back to the title
+await A.click('button:has-text("1 PLAYER")');
+await A.waitForTimeout(1000);
+ok('choosing a mode after the start screen sticks', await ev(A, (d) => d.screen() === 'play'));
+await A.keyboard.press('Escape');
+await A.keyboard.press('Digit3');
+await A.waitForTimeout(800);
+ok('the keyboard menu works after it too', await ev(A, (d) => d.screen() === 'roles'));
 
 // ---- next visit: loaded, not traced
 const B = await open(ctx);
@@ -52,6 +60,9 @@ await until(C, (d) => d.startPhase() === 'render', null, 10000);
 await C.keyboard.press('Space');
 await until(C, (d) => d.screen() === 'title', null, 3000);
 ok('start during the trace skips straight to the menu', true);
+await C.click('button:has-text("2 PLAYERS ONLINE")');
+await C.waitForTimeout(1000);
+ok('choosing a mode after skipping sticks', await ev(C, (d) => d.screen() === 'lobby'));
 
 // ---- 8-bit look and reduced motion
 const eight = await browser.newContext({ viewport: { width: 800, height: 900 }, reducedMotion: 'reduce' });

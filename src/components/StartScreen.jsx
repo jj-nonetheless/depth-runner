@@ -33,6 +33,9 @@ export default function StartScreen() {
   let cv;
   let status;
   let raf = 0;
+  let stopped = false; // set when the start screen goes away; nothing may run after that
+  let handedOver = false;
+  const finish = () => { if (!handedOver) { handedOver = true; goTitle(); } };
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const S = {
     t: 0, phaseT: 0, buf: null, tracer: null, raw: null, rawCtx: null,
@@ -43,7 +46,7 @@ export default function StartScreen() {
   const press = () => {
     const p = startPhase();
     if (p === 'leave') return;
-    if (p === 'loading' || p === 'render' || p === 'convert') { goTitle(); return; } // skip it all
+    if (p === 'loading' || p === 'render' || p === 'convert') { finish(); return; } // skip it all
     fanfare();
     phase('leave');
   };
@@ -59,8 +62,10 @@ export default function StartScreen() {
     const x = cv.getContext('2d');
     x.imageSmoothingEnabled = false;
     if (document.fonts?.load) await Promise.race([document.fonts.load('38px "Press Start 2P"'), new Promise((r) => setTimeout(r, 1500))]).catch(() => {});
+    if (stopped) return;
     S.logo = buildLogo();
     S.buf = await loadRender();
+    if (stopped) return;
     if (S.buf) phase('intro');
     else {
       S.tracer = createTracer();
@@ -72,16 +77,19 @@ export default function StartScreen() {
     const STEP = 1000 / 60;
     let last = performance.now(), acc = 0;
     const frame = (now) => {
+      if (stopped) return;
       acc += Math.min(250, now - last);
       last = now;
       if (startPhase() === 'render') trace();
-      while (acc >= STEP) { tick(); acc -= STEP; }
+      while (acc >= STEP && !stopped) { tick(); acc -= STEP; }
+      // tick() can hand over to the title, which removes this screen mid-frame: don't schedule another
+      if (stopped) return;
       draw(x);
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
   });
-  onCleanup(() => { cancelAnimationFrame(raf); window.removeEventListener('keydown', onKey); });
+  onCleanup(() => { stopped = true; cancelAnimationFrame(raf); window.removeEventListener('keydown', onKey); });
 
   // ---------- tracing on screen
   function trace() {
@@ -114,7 +122,7 @@ export default function StartScreen() {
       if (S.phaseT === 40 && !reduce) { S.flash = 12; S.shake = 9; }
       if (S.phaseT > (reduce ? 1 : 110)) phase('attract');
     }
-    if (p === 'leave' && S.phaseT > 40) goTitle();
+    if (p === 'leave' && S.phaseT > 40) finish();
     if (!reduce) S.scroll += 1.2;
     // sparkles along the logo's edges
     if (!reduce && S.logo && (p === 'attract' || p === 'intro') && S.t % 9 === 0 && S.logo.sparks.length) {
