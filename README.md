@@ -17,6 +17,19 @@ parallax layers (clouds, islands, light rays, three rock and kelp layers, fish, 
 that move with the current and the sub, animated propellers, wakes and funnel smoke, tumbling depth charges,
 layered explosions, splashes, shockwaves, ships that tilt and sink, and screen shake.
 
+## The start screen
+
+Every visit opens on a pre-rendered title, in the style of 1980s box art and demo-scene intros. On the
+first visit a small ray tracer in the page renders the scene line by line on screen (a glossy submarine
+breaking the surface in front of a striped sunset sun, on a sea with a neon grid that reflects the sky and
+the sub), then dithers it down to the look's palette: the 512 colours of a Mega Drive for 16-bit, or the
+16 colours of a Commodore 64 at half resolution for 8-bit. The render is saved in the browser, so later
+visits skip straight to the show. The chrome logo is pre-rendered too: bevelled, mirror-finished with a
+sky-over-ground reflection, extruded and glowing. Then attract mode runs: the logo crashes in, a shine
+sweeps across it, the sun throws a lens flare, raster bars roll behind PRESS START, a sine-wave scroller
+runs along the bottom, and the Top 10 comes up every so often. Press start (Enter, Space, a click or a tap)
+for a fanfare and the title menu; pressing it while the scene is still tracing skips straight to the menu.
+
 ## Run it
 
 ```sh
@@ -50,7 +63,7 @@ explains why, and the computer is still available.
 
 ## Power-ups
 
-Colour shows the kind (cyan = defence, orange = weapon, yellow = speed); the letter says which.
+Colour shows the kind (cyan = defence, orange = weapon, yellow = speed); the pixel icon says which.
 They turn up every 9–18 seconds at first, closer together as a game goes on. Losing a life loses any timed
 power-up.
 
@@ -78,12 +91,13 @@ power-up.
 src/
   game/        constants, engine (rules + state), ai, snapshot (online sync), input, sound
                render (picks the look), render8 (8-bit), render16 + art + scene (16-bit), vfx (visual effects)
+  start/       the start screen's ray tracer, render cache, chrome logo and palette dithering
   look.js      the player's 8-bit / 16-bit choice; look8.css and look16.css style the page for each
   net/room.js  the online lobby: presence, challenges, matching
   controller.js  screen flow and the 60 Hz loop; decides who runs the game online
   components/  Solid screens over the canvas (title, lobby, sides, results), touch pads, rules
 tests/         solo.mjs (one page), online.mjs (tabs sharing tests/mockroom.js, a stand-in for the room),
-               scores.mjs (the Top 10, with tests/mockdb.js), looks.mjs (8-bit / 16-bit)
+               scores.mjs (the Top 10, with tests/mockdb.js), looks.mjs (8-bit / 16-bit), start.mjs (start screen)
 ```
 
 Online, everything travels in **presence**, the part of the room every viewer may send. Each page shares its

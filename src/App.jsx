@@ -27,6 +27,7 @@ export default function App() {
     if (typing(e)) return;
     if (e.code === 'KeyG') toggleLook();
     const s = screen();
+    if (s === 'start') return; // the start screen handles its own keys
     if (s === 'play') {
       if (GAME_KEYS.includes(e.code)) e.preventDefault();
       press(e.code, true);

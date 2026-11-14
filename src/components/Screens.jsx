@@ -7,6 +7,7 @@ import {
 import { net, mine, setNick, opponent, incoming, others } from '../net/room.js';
 import { board, saveShared } from '../net/scores.js';
 import Leaderboard from './Leaderboard.jsx';
+import StartScreen from './StartScreen.jsx';
 
 const focusFirst = (get) => onMount(() => get()?.querySelector('button')?.focus({ preventScroll: true }));
 
@@ -243,6 +244,7 @@ function Over() {
 export default function Screens() {
   return (
     <Switch>
+      <Match when={screen() === 'start'}><StartScreen /></Match>
       <Match when={screen() === 'title'}><Title /></Match>
       <Match when={screen() === 'lobby'}><Lobby /></Match>
       <Match when={screen() === 'roles'}><Roles /></Match>

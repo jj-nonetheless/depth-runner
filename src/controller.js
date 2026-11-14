@@ -17,7 +17,9 @@ import {
   net, mine, setMine, sendPresence, opponent, declinedBy, peerGone, opponentPresence, challengeId,
 } from './net/room.js';
 
-export const [screen, setScreen] = createSignal('title');
+// the start screen plays on every visit; the browser tests skip it unless they ask for it (?test&start)
+const params = new URLSearchParams(location.search);
+export const [screen, setScreen] = createSignal(params.has('test') && !params.has('start') ? 'title' : 'start');
 export const [against, setAgainst] = createSignal('cpu'); // who the roles screen is for: 'cpu' | 'remote'
 export const [notice, setNotice] = createSignal('');
 export const [result, setResult] = createSignal(null); // { mode, winner, won, score, oppLeft }
