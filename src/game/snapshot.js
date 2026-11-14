@@ -10,7 +10,7 @@ export function encode() {
   const { sub, boat, msg } = S;
   return {
     gid: S.gid, st: S.phase, w: S.winner,
-    sx: r1(sub.x), sl: S.lives, sh: sub.shield ? 1 : 0, tw: sub.twin, rp: sub.rapid, iv: S.inv,
+    sx: r1(sub.x), sl: S.lives, hu: Math.round(S.hull), bh: Math.round(boat.hull), sh: sub.shield ? 1 : 0, tw: sub.twin, rp: sub.rapid, iv: S.inv,
     bx: r1(boat.x), bd: boat.down, bi: boat.inv, bl: S.boatLives, ba: boat.armor ? 1 : 0, bc: boat.cluster, br: boat.rapid,
     c: S.charges.map((c) => [r1(c.x), r1(c.y)]),
     tp: S.torps.map((t) => [r1(t.x), r1(t.y)]),
@@ -40,6 +40,7 @@ export function apply(s, guest) {
   sub.x = N(s.sx, 0, W - 12); S.lives = N(s.sl, 0, 9) | 0; sub.shield = !!s.sh; sub.twin = N(s.tw, 0, 999); sub.rapid = N(s.rp, 0, 999); S.inv = N(s.iv, 0, 999) | 0;
   boat.x = N(s.bx, 0, W - 16); boat.down = N(s.bd, 0, 999) | 0; boat.inv = N(s.bi, 0, 999) | 0; S.boatLives = N(s.bl, 0, 9) | 0;
   boat.armor = !!s.ba; boat.cluster = N(s.bc, 0, 999); boat.rapid = N(s.br, 0, 999);
+  S.hull = N(s.hu, 0, 100); boat.hull = N(s.bh, 0, 100);
   S.charges = list(s.c, 16).map((a) => ({ x: N(a?.[0], -4, W + 4), y: N(a?.[1], 0, H), v: 0.65 }));
   S.torps = list(s.tp, 8).map((a) => ({ x: N(a?.[0], 0, W), y: N(a?.[1], 0, H) }));
   S.items = list(s.it, 8).filter((a) => Array.isArray(a) && has(PU, a[1]))

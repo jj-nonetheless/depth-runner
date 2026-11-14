@@ -57,8 +57,10 @@ export function animate() {
     for (const c of S.charges) if (tick % 12 === 0) addBubble(c.x * Z, c.y * Z - 4, 1, 0.4, 40);
     // funnel smoke
     if (tick % 8 === 0) {
-      for (const s of S.ships) R.smoke.push({ x: s.x * Z + (s.v > 0 ? 10 : 21), y: s.y * Z - 2 + waveY(s.x * Z + 16), t: 0 });
-      if (S.mode === 2 && boat.down === 0 && tick % 16 === 0) R.smoke.push({ x: boat.x * Z + (R.boatDir > 0 ? 16 : 15), y: boat.y * Z - 1 + waveY(boat.x * Z + 16), t: 0, thin: true });
+      for (const s of S.ships) R.smoke.push({ x: s.x * Z + (s.v > 0 ? 10 : 21), y: s.y * Z - 2 + waveY(s.x * Z + 16), t: 0, dark: s.hp < 40 });
+      // a damaged destroyer smokes harder, and black
+      const hurt = boat.hull < 60;
+      if (S.mode === 2 && boat.down === 0 && tick % (hurt ? 8 : 16) === 0) R.smoke.push({ x: boat.x * Z + (R.boatDir > 0 ? 16 : 15), y: boat.y * Z - 1 + waveY(boat.x * Z + 16), t: 0, thin: !hurt, dark: hurt });
     }
   } else {
     R.subPrev = null;
@@ -82,6 +84,10 @@ function drawSub() {
   ctx.drawImage(right ? SPR.sub.r : SPR.sub.l, x, y);
   const frame = (tick >> (R.subMoving ? 1 : 3)) % 2;
   ctx.drawImage(right ? SPR.prop[frame].r : SPR.prop[frame].l, right ? x - 2 : x + 30, y + 9);
+  // a badly damaged hull throws sparks
+  if (S.hull < 45 && S.phase === 'play' && (tick >> 2) % 3 === 0) {
+    for (let i = 0; i < 3; i++) { ctx.fillStyle = ['#ffd060', '#ff8a3a', '#ffffff'][i]; ctx.fillRect(x + 6 + ((tick * 7 + i * 9) % 18), y + 7 + ((tick + i * 5) % 6), 1, 1); }
+  }
   if (sub.shield && S.phase === 'play') {
     const cx = x + 15, cy = y + 10;
     ctx.globalAlpha = 0.18 + 0.08 * Math.sin(tick * 0.2);
@@ -130,7 +136,7 @@ function drawSmoke() {
   for (const p of R.smoke) {
     const r = (p.thin ? 1.5 : 2) + p.t * 0.08;
     ctx.globalAlpha = Math.max(0, 0.6 - p.t / 80);
-    ctx.drawImage(disc(r, p.t < 10 ? '#5a5466' : '#8a8498'), Math.round(p.x - r), Math.round(p.y - r));
+    ctx.drawImage(disc(r, p.dark ? (p.t < 14 ? '#1a1620' : '#3a3440') : p.t < 10 ? '#5a5466' : '#8a8498'), Math.round(p.x - r), Math.round(p.y - r));
   }
   ctx.globalAlpha = 1;
 }
@@ -314,6 +320,15 @@ function puIcon(k, x, y, left, total) {
     ctx.fillStyle = PU[k].c; ctx.fillRect(x, y + 16, Math.round((14 * left) / total), 1);
   }
 }
+function hullBar(x, y, value, alignRight) {
+  const w = 44, f = Math.max(0, Math.min(1, value / 100));
+  const bx = alignRight ? x - w : x;
+  ctx.fillStyle = K; ctx.fillRect(bx - 1, y - 1, w + 2, 6);
+  ctx.fillStyle = '#2a1f3a'; ctx.fillRect(bx, y, w, 4);
+  ctx.fillStyle = f > 0.6 ? '#6ad86a' : f > 0.3 ? '#f0c040' : (tick >> 3) % 2 ? '#ff4a3a' : '#a02a20';
+  ctx.fillRect(alignRight ? bx + w - Math.round(w * f) : bx, y, Math.round(w * f), 4);
+  ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(alignRight ? bx + w - Math.round(w * f) : bx, y, Math.round(w * f), 1);
+}
 function drawHud() {
   const { sub, boat } = S;
   if (S.mode === 1) {
@@ -322,11 +337,14 @@ function drawHud() {
     text('LV ' + S.level, SW / 2, 5, '#ffffff', 'center');
     text('HI ' + String(S.hi).padStart(6, '0'), SW / 2, 15, '#ffcf8a', 'center');
     lives(S.lives, SW - 6, 6, SPR.life, true);
+    hullBar(SW - 6, 16, S.hull, true);
   } else {
     text('SUB', 6, 5, '#d4e86a');
     lives(S.lives, 6, 15, SPR.life, false);
     text('SHIP', SW - 6, 5, '#ffb0a0', 'right');
     lives(S.boatLives, SW - 6, 15, SPR.shipLife, true);
+    hullBar(6, 24, S.hull, false);
+    hullBar(SW - 6, 24, boat.hull, true);
     text(S.opp === 'remote' ? 'ONLINE' : 'VS CPU', SW / 2, 5, '#ffffff', 'center');
     text('YOU: ' + S.myRole.toUpperCase(), SW / 2, 15, S.myRole === 'sub' ? '#d4e86a' : '#ffb0a0', 'center');
   }
@@ -341,7 +359,7 @@ function drawHud() {
   if (S.mode === 2) {
     x = SW - 20;
     for (const [k, left, total] of [['armor', boat.armor ? 1 : 0], ['cluster', boat.cluster, 600], ['reload', boat.rapid, 600]]) {
-      if (left > 0) { puIcon(k, x, 27, total ? left : undefined, total); x -= 20; }
+      if (left > 0) { puIcon(k, x, 33, total ? left : undefined, total); x -= 20; }
     }
   }
   if (S.msg.t > 0) text(S.msg.text, SW / 2, 66, S.msg.c, 'center');

@@ -87,9 +87,13 @@ ok('torpedo shows on both screens', true);
 await ev(A, (d) => d.applySub('twin'));
 await until(B, (d) => d.S.msg.text === 'TWIN TORPS' && d.S.sub.twin > 0);
 ok('power-ups show on both screens', true);
+await ev(A, (d) => { d.S.hull = 55; d.S.boat.hull = 40; d.S.inv = 1e9; d.S.boat.inv = 1e9; });
+await until(B, (d) => d.S.hull === 55 && d.S.boat.hull === 40);
+ok('hull damage shows on both screens', true);
+await ev(A, (d) => { d.S.inv = 0; d.S.boat.inv = 0; });
 
 // ---- sub wins; both see it
-await ev(A, (d) => { const { S } = d; S.boatLives = 1; S.boat.down = 0; S.boat.inv = 0; S.boat.armor = false; S.torps = [{ x: S.boat.x + 6, y: S.boat.y + 8 }]; });
+await ev(A, (d) => { const { S } = d; S.boatLives = 1; S.boat.hull = 1; S.boat.down = 0; S.boat.inv = 0; S.boat.armor = false; S.torps = [{ x: S.boat.x + 6, y: S.boat.y + 8 }]; });
 await until(A, (d) => d.screen() === 'over');
 await until(B, (d) => d.screen() === 'over');
 ok('both see the result', await A.isVisible('text=YOU WIN') && await B.isVisible('text=YOU LOSE'));

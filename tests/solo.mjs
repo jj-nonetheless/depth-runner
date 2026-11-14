@@ -29,18 +29,18 @@ await page.keyboard.down('Space'); await until(page, (d) => d.S.torps.length >= 
 ok('twin torpedoes fire in pairs', await ev(page, (d) => d.S.torps.length === 2 && d.S.torps[0].y === d.S.torps[1].y));
 await ev(page, (d) => { d.applySub('rapid'); d.S.sub.twin = 0; d.S.torps = []; d.S.cool = 0; });
 await page.keyboard.down('Space'); await until(page, (d) => d.S.torps.length > 0); await page.keyboard.up('Space');
-ok('rapid fire shortens reload', await ev(page, (d) => d.S.cool <= 6));
+ok('rapid fire shortens reload', await ev(page, (d) => d.S.cool <= d.ARMS.torpCoolRapid && d.ARMS.torpCoolRapid < d.ARMS.torpCool));
 await ev(page, (d) => { d.S.sub.shield = true; d.S.inv = 0; d.S.charges = [{ x: d.S.sub.x + 6, y: d.S.sub.y + 1, v: 0 }]; });
 await until(page, (d) => !d.S.sub.shield);
 ok('shield blocks one hit', await ev(page, (d) => d.S.lives === 3));
-await ev(page, (d) => { d.S.sub.twin = 500; d.S.inv = 0; d.S.charges = [{ x: d.S.sub.x + 6, y: d.S.sub.y + 1, v: 0 }]; });
+await ev(page, (d) => { d.S.sub.twin = 500; d.S.hull = 1; d.S.inv = 0; d.S.charges = [{ x: d.S.sub.x + 6, y: d.S.sub.y + 1, v: 0 }]; });
 await until(page, (d) => d.S.lives === 2);
 ok('losing a life clears timed power-ups', await ev(page, (d) => d.S.sub.twin === 0 && d.S.sub.rapid === 0));
 await ev(page, (d) => d.applySub('life'));
 ok('extra sub', await ev(page, (d) => d.S.lives === 3));
 
 // ---- game over screen
-await ev(page, (d) => { d.S.lives = 1; d.S.inv = 0; d.S.sub.shield = false; d.S.charges = [{ x: d.S.sub.x + 6, y: d.S.sub.y + 1, v: 0 }]; });
+await ev(page, (d) => { d.S.lives = 1; d.S.hull = 1; d.S.inv = 0; d.S.sub.shield = false; d.S.charges = [{ x: d.S.sub.x + 6, y: d.S.sub.y + 1, v: 0 }]; });
 await until(page, (d) => d.screen() === 'over');
 ok('game over screen', await page.isVisible('text=GAME OVER') && await page.isVisible('button:has-text("PLAY AGAIN")'));
 await page.keyboard.press('Enter');
@@ -71,7 +71,7 @@ const livesBefore = await ev(page, (d) => d.S.boatLives);
 await ev(page, (d) => { d.S.cool = 1e6; d.S.charges = []; d.applyShip('armor'); d.S.boat.inv = 0; d.S.boat.down = 0; d.S.torps = [{ x: d.S.boat.x + 6, y: d.S.boat.y + 8 }]; });
 await until(page, (d) => !d.S.boat.armor);
 ok('armor blocks one torpedo', await ev(page, (d, n) => d.S.boatLives === n, livesBefore));
-await ev(page, (d) => { d.S.boatLives = 1; d.S.boat.down = 0; d.S.boat.inv = 0; d.S.torps = [{ x: d.S.boat.x + 6, y: d.S.boat.y + 8 }]; });
+await ev(page, (d) => { d.S.boatLives = 1; d.S.boat.hull = 1; d.S.boat.down = 0; d.S.boat.inv = 0; d.S.torps = [{ x: d.S.boat.x + 6, y: d.S.boat.y + 8 }]; });
 await until(page, (d) => d.screen() === 'over');
 ok('sub wins, you lose', await page.isVisible('text=SUB WINS!') && await page.isVisible('text=YOU LOSE') && await page.isVisible('button:has-text("CHANGE SIDE")'));
 await page.click('button:has-text("PLAY AGAIN")');

@@ -59,7 +59,7 @@ ok('lifting the finger anywhere lets it go', (await held()).length === 0);
 // the game ends while the finger is still down: the buttons go away mid-press
 await pointer(LEFT, 'pointerdown');
 await pointer('.pad.fire', 'pointerdown', 8);
-await ev(p, (d) => { const { S } = d; S.lives = 1; S.inv = 0; S.sub.shield = false; S.charges = [{ x: S.sub.x + 6, y: S.sub.y + 1, v: 0 }]; });
+await ev(p, (d) => { const { S } = d; S.lives = 1; S.hull = 1; S.inv = 0; S.sub.shield = false; S.charges = [{ x: S.sub.x + 6, y: S.sub.y + 1, v: 0 }]; });
 await until(p, (d) => d.screen() === 'over');
 ok('game over mid-press leaves nothing held', (await held()).length === 0);
 await p.click('button:has-text("PLAY AGAIN")');

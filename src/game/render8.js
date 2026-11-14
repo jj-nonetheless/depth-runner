@@ -48,16 +48,26 @@ function ring(x, y, w, h) {
   ctx.fillRect(x + w - 1, y + 1, 1, h - 2);
 }
 
+function hullBar(x, y, value, alignRight) {
+  const w = 24, f = Math.max(0, Math.min(1, value / 100)), fill = Math.round(w * f);
+  const bx = alignRight ? x - w : x;
+  ctx.fillStyle = P.dark; ctx.fillRect(bx, y, w, 2);
+  ctx.fillStyle = f > 0.6 ? '#9AD284' : f > 0.3 ? P.boom : P.red;
+  ctx.fillRect(alignRight ? bx + w - fill : bx, y, fill, 2);
+}
 function drawHud() {
   const { sub, boat } = S;
   if (S.mode === 1) {
     txt('SCORE ' + S.score, 2, 8);
     txt('LV ' + S.level, W / 2, 8, P.txt, 'center');
     txt('SUBS ' + S.lives, W - 2, 8, P.txt, 'right');
+    hullBar(W - 2, 10, S.hull, true);
     txt('HI ' + S.hi, W / 2, 17, P.boom, 'center');
   } else {
     txt('SUB ' + S.lives, 2, 8, P.sub);
     txt('SHIP ' + S.boatLives, W - 2, 8, P.boat, 'right');
+    hullBar(2, 10, S.hull, false);
+    hullBar(W - 2, 10, boat.hull, true);
     txt(S.opp === 'remote' ? 'ONLINE' : 'VS CPU', W / 2, 8, P.txt, 'center');
     txt('YOU: ' + S.myRole.toUpperCase(), W / 2, 17, S.myRole === 'sub' ? P.sub : P.boat, 'center');
   }
@@ -69,9 +79,9 @@ function drawHud() {
   if (sub.rapid > 0) { icon('rapid', x, BED + 1, sub.rapid); x += 9; }
   if (S.mode === 2) {
     x = W - 9;
-    if (boat.armor) { icon('armor', x, 10); x -= 9; }
-    if (boat.cluster > 0) { icon('cluster', x, 10, boat.cluster); x -= 9; }
-    if (boat.rapid > 0) { icon('reload', x, 10, boat.rapid); x -= 9; }
+    if (boat.armor) { icon('armor', x, 13); x -= 9; }
+    if (boat.cluster > 0) { icon('cluster', x, 13, boat.cluster); x -= 9; }
+    if (boat.rapid > 0) { icon('reload', x, 13, boat.rapid); x -= 9; }
   }
   if (S.msg.t > 0) txt(S.msg.text, W / 2, 36, S.msg.c, 'center');
   if (S.paused) {

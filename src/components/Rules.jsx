@@ -34,10 +34,17 @@ export default function Rules() {
           <p class="note">Colour shows the kind: cyan defence, orange weapons, yellow speed. They turn up more often the longer a game runs. Losing a life loses timed power-ups.</p>
         </section>
         <section>
-          <h2>1 Player</h2>
+          <h2>Blasts</h2>
           <dl>
-            <dt>Depth charge</dt><dd class="pts">10 PTS</dd>
+            <dt>Depth charges</dt><dd>Go off near the sub, on the seabed, or when shot. Shooting one sets off the charges around it, but too close above you and the blast hurts you too.</dd>
+            <dt>Torpedoes</dt><dd>Go off near a ship or at the surface, damaging everything in range.</dd>
+            <dt>Damage</dt><dd>Full at the centre of a blast, less toward the edge. Lose all your hull and you lose a life.</dd>
+            <dt>Reload</dt><dd>About two torpedoes or two charges a second, a few in the water at once.</dd>
+          </dl>
+          <h2 class="gap">1 Player</h2>
+          <dl>
             <dt>Ship sunk</dt><dd class="pts">100 PTS</dd>
+            <dt>Charge shot</dt><dd class="pts">10 PTS each, chain reactions too</dd>
             <dt>Every 8 ships</dt><dd>Level up: faster ships, more charges</dd>
             <dt>Subs</dt><dd>3 to start</dd>
           </dl>
@@ -45,7 +52,7 @@ export default function Rules() {
           <dl>
             <dt>Lobby</dt><dd>See who else has the game open, challenge someone, or accept a challenge.</dd>
             <dt>Sides</dt><dd>Each player picks sub or ship, then presses Ready.</dd>
-            <dt>Win</dt><dd>3 lives each. Sink the other side 3 times.</dd>
+            <dt>Win</dt><dd>3 lives each, each with a full hull. Sink the other side 3 times.</dd>
             <dt>Left early</dt><dd>If your opponent leaves, the computer takes over.</dd>
           </dl>
           <p class="note">Online play works on claude.ai for people who are signed in and have access to this page. Anyone else can play the computer.</p>

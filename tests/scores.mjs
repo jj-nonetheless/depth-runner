@@ -21,7 +21,7 @@ async function finishWith(p, score) {
   await p.keyboard.press('Escape');
   await p.keyboard.press('Digit1');
   await until(p, (d) => d.screen() === 'play');
-  await ev(p, (d, n) => { const { S } = d; S.score = n; S.lives = 1; S.inv = 0; S.sub.shield = false; S.charges = [{ x: S.sub.x + 6, y: S.sub.y + 1, v: 0 }]; }, score);
+  await ev(p, (d, n) => { const { S } = d; S.score = n; S.lives = 1; S.hull = 1; S.inv = 0; S.sub.shield = false; S.charges = [{ x: S.sub.x + 6, y: S.sub.y + 1, v: 0 }]; }, score);
   await until(p, (d) => d.screen() === 'over');
 }
 const topRows = (p) => p.locator('.top10 .scores li').allInnerTexts();

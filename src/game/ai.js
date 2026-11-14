@@ -25,11 +25,11 @@ export function aiSub() {
   if (--ai.t <= 0) {
     ai.t = (6 + Math.random() * 8) | 0;
     const cx = sub.x + 6;
-    const threat = S.charges.filter((c) => c.y > SURF + 30 && Math.abs(c.x - cx) < 9).sort((a, b) => b.y - a.y)[0];
+    const threat = S.charges.filter((c) => c.y > SURF + 20 && Math.abs(c.x - cx) < 16).sort((a, b) => b.y - a.y)[0];
     // a torpedo takes ~42 ticks to reach the surface, so aim where the ship will be
     const lead = boat.x + 8 + boat.vx * 42;
     let tx;
-    if (threat && threat.y > BED - 40) tx = (threat.x < cx ? cx + 18 : cx - 18) - 6;
+    if (threat && threat.y > BED - 45) tx = (threat.x < cx ? cx + 24 : cx - 24) - 6;
     else {
       const pu = S.items.find((i) => i.owner === 'sub' && i.y > SURF + 30);
       tx = pu ? pu.x - 2 : boat.down ? sub.x : lead - 4;
@@ -38,7 +38,8 @@ export function aiSub() {
     if (tx > W - 14 && threat) tx = threat.x - 22;
     ai.tx = Math.max(0, Math.min(W - 12, tx));
     ai.fire = (boat.down === 0 && boat.inv === 0 && Math.abs(sub.x + 4 - lead) < 5 && Math.random() < 0.7)
-      || (!!threat && Math.abs(threat.x - (sub.x + 5)) < 3);
+      // shoot a charge only while it is still far enough above that its blast can't reach us
+      || (!!threat && Math.abs(threat.x - (sub.x + 5)) < 3 && threat.y < sub.y - 22);
   }
   const dx = ai.tx - sub.x;
   return { l: dx < -1, r: dx > 1, a: ai.fire };

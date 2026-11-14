@@ -16,7 +16,7 @@ await new Promise((r) => server.once('listening', r));
 const url = `http://127.0.0.1:${server.address().port}/?test`;
 
 let failed = false;
-for (const suite of ['tests/solo.mjs', 'tests/online.mjs', 'tests/scores.mjs', 'tests/looks.mjs', 'tests/start.mjs', 'tests/touch.mjs']) {
+for (const suite of ['tests/solo.mjs', 'tests/online.mjs', 'tests/scores.mjs', 'tests/looks.mjs', 'tests/start.mjs', 'tests/touch.mjs', 'tests/blasts.mjs']) {
   console.log(`\n== ${suite}`);
   // async on purpose: a blocking spawn would stall this process's test server
   const code = await new Promise((r) => spawn(process.execPath, [suite, url], { stdio: 'inherit' }).on('exit', r));

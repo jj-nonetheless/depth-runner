@@ -80,10 +80,24 @@ power-up.
 - **C** Cluster: drops 3 charges side by side, for 10 seconds
 - **R** Fast reload: for 10 seconds
 
+## Blasts and damage
+
+Torpedoes and depth charges explode with an area blast. Damage is full at the centre and falls to nothing
+at the edge, so a near miss still hurts and a distant one doesn't. The sub, the destroyer and the computer's
+freighters all have a hull: run it down and you lose a life (or the ship sinks), and the hull refills.
+
+- **Depth charges** go off when they come close to the sub, hit the seabed, are shot, or are caught in
+  another blast, so shooting one can set off a chain reaction. Shoot one too close above you and the
+  blast reaches you as well.
+- **Torpedoes** go off near a ship or at the surface, so a near miss still damages a ship.
+- **Reload** is evened out: the sub fires about two torpedoes a second with at most three in the water
+  (rapid fire roughly doubles it); the destroyer drops about two charges a second with at most four.
+  The numbers live in one table, `ARMS` in `src/game/engine.js`.
+
 ## Scoring and winning
 
-- 1 player: depth charge 10 points, ship 100 points, level up every 8 ships, 3 lives.
-- 2 players: 3 lives each. The sub wins by torpedoing the ship 3 times; the ship wins by hitting the sub 3 times.
+- 1 player: each charge you set off 10 points (chain reactions included), ship 100 points, level up every 8 ships, 3 lives.
+- 2 players: 3 lives each, each with a full hull. The side that sinks the other 3 times wins.
 
 ## How the code is laid out
 
@@ -97,7 +111,8 @@ src/
   controller.js  screen flow and the 60 Hz loop; decides who runs the game online
   components/  Solid screens over the canvas (title, lobby, sides, results), touch pads, rules
 tests/         solo.mjs (one page), online.mjs (tabs sharing tests/mockroom.js, a stand-in for the room),
-               scores.mjs (the Top 10, with tests/mockdb.js), looks.mjs (8-bit / 16-bit), start.mjs (start screen)
+               scores.mjs (the Top 10, with tests/mockdb.js), looks.mjs (8-bit / 16-bit), start.mjs (start screen),
+               touch.mjs (touch controls), blasts.mjs (area blasts, damage, fire rates)
 ```
 
 Online, everything travels in **presence**, the part of the room every viewer may send. Each page shares its
