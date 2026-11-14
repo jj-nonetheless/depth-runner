@@ -56,7 +56,8 @@ for (let i = 0; i < 9; i++) {
   await A.click('button:has-text("SAVE")');
   await A.locator('text=SAVED').waitFor();
 }
-await until(B, (d) => d.board.shared.length === 10);
+// wait for the last save to arrive, not just for ten entries
+await until(B, (d) => d.board.shared.length === 10 && d.board.shared[0].score === 1080);
 const all = await ev(B, (d) => d.board.shared.map((e) => e.score));
 ok('board keeps the ten best, highest first', all.length === 10 && all[0] === 1080 && all[9] === 900 && !all.includes(500) && all.every((v, i) => i === 0 || all[i - 1] >= v));
 await finishWith(B, 100);

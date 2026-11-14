@@ -1,6 +1,9 @@
 import { render } from 'solid-js/web';
+import './look.js'; // sets the page's look before the first paint
 import App from './App.jsx';
-import './styles.css';
+import './look8.css';
+import './look16.css';
+import './common.css';
 import * as engine from './game/engine.js';
 import * as controller from './controller.js';
 import * as room from './net/room.js';

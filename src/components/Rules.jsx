@@ -13,6 +13,7 @@ export default function Rules() {
             <dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></dt><dd>On the title screen: 1 player, online, vs computer</dd>
             <dt><kbd>ENTER</kbd></dt><dd>Play again after a game</dd>
             <dt><kbd>P</kbd> <kbd>ESC</kbd></dt><dd>Pause (not online) / leave</dd>
+            <dt><kbd>G</kbd></dt><dd>Switch between 8-bit and 16-bit graphics (just for you)</dd>
           </dl>
         </section>
         <section>

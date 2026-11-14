@@ -9,6 +9,7 @@ import Screens from './components/Screens.jsx';
 import Pads from './components/Pads.jsx';
 import Rules from './components/Rules.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
+import { look, setLook, toggleLook } from './look.js';
 
 const GAME_KEYS = ['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
 
@@ -24,6 +25,7 @@ export default function App() {
   const typing = (e) => e.target instanceof HTMLInputElement;
   const onKey = (e) => {
     if (typing(e)) return;
+    if (e.code === 'KeyG') toggleLook();
     const s = screen();
     if (s === 'play') {
       if (GAME_KEYS.includes(e.code)) e.preventDefault();
@@ -55,7 +57,15 @@ export default function App() {
     <div class="wrap">
       <header>
         <h1>DEPTH RUNNER</h1>
-        <p class="tag"><span class="badge">16-BIT EDITION</span><span class="blink">PUSH START</span></p>
+        <div class="head-right">
+          <Show when={look() === '8'} fallback={<p class="tag"><span class="badge">16-BIT EDITION</span><span class="blink">PUSH START</span></p>}>
+            <p class="load">LOAD "DEPTH RUNNER",1 &nbsp;<b>READY.</b> <span class="cursor" /></p>
+          </Show>
+          <div class="look" role="group" aria-label="Graphics">
+            <button aria-pressed={look() === '8'} onClick={() => setLook('8')}>8-BIT</button>
+            <button aria-pressed={look() === '16'} onClick={() => setLook('16')}>16-BIT</button>
+          </div>
+        </div>
       </header>
 
       <div class="frame">

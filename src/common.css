@@ -1,0 +1,14 @@
+/* Shared by both looks: the 8-BIT / 16-BIT switch in the header (colours come from each look's tokens). */
+.head-right { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.look { display: flex; }
+.look button {
+  font-family: var(--display); font-size: 10px; letter-spacing: .04em; padding: 8px 10px; min-height: 36px; cursor: pointer;
+  color: var(--ink); background: transparent; border: 2px solid var(--border);
+}
+.look button + button { border-left: 0; }
+.look button[aria-pressed="true"] { background: var(--border); color: var(--bright); }
+.look button:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+html[data-look="16"] .look button { border-color: var(--win-edge); background: linear-gradient(#24318a, #121a5a); text-shadow: 1px 1px 0 #000; }
+html[data-look="16"] .look button:first-child { border-radius: 4px 0 0 4px; }
+html[data-look="16"] .look button:last-child { border-radius: 0 4px 4px 0; }
+html[data-look="16"] .look button[aria-pressed="true"] { background: linear-gradient(var(--win-hi), var(--win-lo)); color: var(--bright); }

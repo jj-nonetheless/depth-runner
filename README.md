@@ -7,7 +7,12 @@ friend online, or against the computer.
 Built with [SolidJS](https://www.solidjs.com/) and [Vite](https://vite.dev/). The build is a single
 self-contained `index.html`.
 
-The game runs on a 160x120 grid and is drawn at 320x240: shaded sprites with outlines, a sunset sky,
+Each player picks how it looks, **8-bit** or **16-bit**, with the switch in the header or the **G** key. The
+choice is saved in that browser and only changes that player's screen, so two people can play one online
+match in different looks. The game itself (rules, timing, online sync) is identical either way.
+
+- **8-bit**: the original Commodore 64 look, drawn at the native 160x120.
+- **16-bit**: drawn at 320x240: shaded sprites with outlines, a sunset sky,
 parallax layers (clouds, islands, light rays, three rock and kelp layers, fish, bubbles and drifting specks)
 that move with the current and the sub, animated propellers, wakes and funnel smoke, tumbling depth charges,
 layered explosions, splashes, shockwaves, ships that tilt and sink, and screen shake.
@@ -40,6 +45,7 @@ explains why, and the computer is still available.
 - **1 / 2 / 3** on the title screen: 1 player, online lobby, vs computer
 - **Enter**: play again after a game
 - **P**: pause (not in online games) · **Esc**: leave
+- **G**: switch between 8-bit and 16-bit graphics
 - On touch screens, on-screen ← → and FIRE/DROP buttons appear during a game.
 
 ## Power-ups
@@ -71,11 +77,13 @@ power-up.
 ```
 src/
   game/        constants, engine (rules + state), ai, snapshot (online sync), input, sound
-               art (sprites), scene (parallax background), vfx (visual-only effects), render (draws it all)
+               render (picks the look), render8 (8-bit), render16 + art + scene (16-bit), vfx (visual effects)
+  look.js      the player's 8-bit / 16-bit choice; look8.css and look16.css style the page for each
   net/room.js  the online lobby: presence, challenges, matching
   controller.js  screen flow and the 60 Hz loop; decides who runs the game online
   components/  Solid screens over the canvas (title, lobby, sides, results), touch pads, rules
-tests/         solo.mjs (one page), online.mjs (tabs sharing tests/mockroom.js, a stand-in for the room)
+tests/         solo.mjs (one page), online.mjs (tabs sharing tests/mockroom.js, a stand-in for the room),
+               scores.mjs (the Top 10, with tests/mockdb.js), looks.mjs (8-bit / 16-bit)
 ```
 
 Online, everything travels in **presence**, the part of the room every viewer may send. Each page shares its
