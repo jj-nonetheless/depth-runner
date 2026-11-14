@@ -35,8 +35,23 @@ const menu = await p.evaluate((s) => {
   return [e.defaultPrevented, frame.defaultPrevented];
 }, LEFT);
 ok('long-press menu is blocked on the buttons and the game screen', menu[0] && menu[1]);
-const sel = await p.evaluate((s) => [getComputedStyle(document.querySelector(s)).userSelect, getComputedStyle(document.querySelector('.frame')).userSelect], LEFT);
-ok('no text selection on the buttons or the game screen', sel.every((v) => v === 'none'));
+const sel = await p.evaluate((s) => [s, '.frame', '.top10 h2', '.info dd', 'h1', 'body'].map((q) => {
+  const cs = getComputedStyle(document.querySelector(q));
+  return cs.webkitUserSelect || cs.userSelect;
+}), LEFT);
+ok('no text selection anywhere on the page, not just the game (iOS selects nearby text)', sel.every((v) => v === 'none'));
+// a long press on a button: the raw touch is cancelled, so iOS can't start its selection or magnifier
+const touchBlocked = await p.evaluate((s) => {
+  const el = document.querySelector(s);
+  const r = el.getBoundingClientRect();
+  const t = new Touch({ identifier: 3, target: el, clientX: r.x + 5, clientY: r.y + 5 });
+  return ['touchstart', 'touchmove', 'touchend'].map((type) => {
+    const e = new TouchEvent(type, { touches: type === 'touchend' ? [] : [t], changedTouches: [t], bubbles: true, cancelable: true });
+    el.dispatchEvent(e);
+    return e.defaultPrevented;
+  });
+}, LEFT);
+ok('touches on the buttons are cancelled (no long-press selection)', touchBlocked.every(Boolean));
 
 // a normal press and release
 await pointer(LEFT, 'pointerdown');
@@ -55,6 +70,12 @@ await pointer(LEFT, 'pointerleave');
 ok('a thumb drifting off the button keeps it held', (await held()).includes('ArrowLeft'));
 await pointer('.who', 'pointerup');
 ok('lifting the finger anywhere lets it go', (await held()).length === 0);
+
+// the name box is still editable text
+ok('name boxes can still be typed in and selected', await p.evaluate(() => {
+  const i = document.createElement('input'); i.className = 'probe'; document.body.append(i);
+  const cs = getComputedStyle(i); const v = cs.webkitUserSelect || cs.userSelect; i.remove(); return v !== 'none';
+}));
 
 // the game ends while the finger is still down: the buttons go away mid-press
 await pointer(LEFT, 'pointerdown');

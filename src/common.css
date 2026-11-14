@@ -25,10 +25,12 @@ html[data-look="16"] .look button[aria-pressed="true"] { background: linear-grad
 .start-btn:focus-visible { opacity: 1; pointer-events: auto; outline: 3px solid #ff3aa8; outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; }
 
-/* No long-press menus, text selection or callouts on the game and its controls: holding a button must
-   only ever mean "hold this button". */
-.frame, .pads, .pad, .start, .panel {
+/* No long-press menus, text selection or callouts anywhere on the page: holding a button must only ever
+   mean "hold this button". iOS Safari otherwise selects the nearest text it can find (a heading below
+   the buttons, say) and shows Copy / Look Up, so selection is off for the whole page, not just the game.
+   Name boxes stay editable. */
+html, body, body * {
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
 }
+input, textarea { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 .pads, .pad, .frame canvas { touch-action: none; }
-.panel input { -webkit-user-select: text; user-select: text; }

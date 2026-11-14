@@ -2,7 +2,7 @@
 // Each button follows the finger that pressed it: the button stays held if the thumb drifts off it, and
 // lets go when that finger lifts anywhere, the touch is cancelled, or the buttons go away mid-press
 // (game over), so a key can never stay stuck down.
-import { onCleanup } from 'solid-js';
+import { onCleanup, onMount } from 'solid-js';
 import { press } from '../game/input.js';
 import { S } from '../game/engine.js';
 
@@ -40,8 +40,14 @@ function Pad(props) {
 
 export default function Pads() {
   const ship = S.mode === 2 && S.myRole === 'ship';
+  let row;
+  // iOS starts its long-press text selection and magnifier from the raw touch events, before any
+  // pointer event can stop it, so cancel those here. The buttons work from pointer events alone.
+  onMount(() => {
+    for (const t of ['touchstart', 'touchmove', 'touchend']) row.addEventListener(t, noMenu, { passive: false });
+  });
   return (
-    <div class={'pads' + (ship ? ' ship' : '')} aria-label="Touch controls" onContextMenu={noMenu}>
+    <div ref={row} class={'pads' + (ship ? ' ship' : '')} aria-label="Touch controls" onContextMenu={noMenu}>
       <div class="grp">
         <Pad code="ArrowLeft" label="Move left">&larr;</Pad>
         <Pad code="ArrowRight" label="Move right">&rarr;</Pad>
